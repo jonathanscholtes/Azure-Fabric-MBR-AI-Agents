@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+from azure.storage.blob import BlobServiceClient, ContentSettings, generate_blob_sas, BlobSasPermissions
 from azure.storage.blob import UserDelegationKey
 from pptx import Presentation
 from pptx.util import Pt
@@ -60,7 +60,7 @@ def _upload_bytes(
     data: bytes, content_type: str = "application/octet-stream",
 ) -> None:
     blob = blob_client.get_blob_client(container=container, blob=blob_path)
-    blob.upload_blob(data, overwrite=True, content_settings={"content_type": content_type})
+    blob.upload_blob(data, overwrite=True, content_settings=ContentSettings(content_type=content_type))
 
 
 def _download_bytes(blob_client: BlobServiceClient, container: str, blob_path: str) -> bytes:

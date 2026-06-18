@@ -391,7 +391,7 @@ Write-Host "`n=== PHASE 4: Deploy Foundry Agents ===" -ForegroundColor Magenta
 if (-not $script:FoundryEp) {
     Write-Warn "foundry_project_endpoint not found in Terraform outputs - skipping agent deployment."
 } else {
-    $mcpUrl = if ($script:McpFqdn) { "https://$($script:McpFqdn)" } else { $null }
+    $mcpUrl = if ($script:McpFqdn) { "https://$($script:McpFqdn)/mcp" } else { $null }
 
     if (-not $mcpUrl) {
         Write-Host "  WARNING: mcp_tools_api_fqdn not in TF outputs - presentation agent deployed without MCP tools." -ForegroundColor Yellow

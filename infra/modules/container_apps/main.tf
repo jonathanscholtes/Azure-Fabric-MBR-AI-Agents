@@ -81,7 +81,7 @@ resource "azurerm_container_app" "mbr_api" {
   }
 }
 
-# ── mbr-tools-mcp (internal ingress, port 8080) ───────────────────────────────
+# ── mbr-tools-mcp (external ingress, port 80) ───────────────────────────────
 resource "azurerm_container_app" "mbr_tools_api" {
   name                         = "ca-mbr-tools-mcp"
   container_app_environment_id = azurerm_container_app_environment.main.id
@@ -104,8 +104,8 @@ resource "azurerm_container_app" "mbr_tools_api" {
   }
 
   ingress {
-    external_enabled = false
-    target_port      = 8080
+    external_enabled = true
+    target_port      = 80
     traffic_weight {
       latest_revision = true
       percentage      = 100

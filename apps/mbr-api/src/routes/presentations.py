@@ -52,8 +52,10 @@ async def _run_mbr_presentation_agent(
     region: str,
 ) -> dict:
     """One-shot Foundry agent call for MBR generation via the Responses protocol."""
+    conv = await openai_client.conversations.create()
     response = await openai_client.responses.create(
         input=f"Generate the MBR deck for {period}, region: {region}.",
+        conversation=conv.id,
         extra_body={"agent_reference": _agent_ref(settings.MBR_PRESENTATION_AGENT_NAME)},
     )
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import os
 
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 
 from .tools.powerpoint_tools import register_powerpoint_tools
 from .tools.library_tools import register_library_tools
@@ -22,17 +22,23 @@ from .tools.library_tools import register_library_tools
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("mbr-tools-mcp")
 
-mcp = FastMCP("mbr-tools")
+host = os.environ.get("HOST", "0.0.0.0")
+port = int(os.environ.get("PORT", "80"))
+
+mcp = FastMCP(
+    name="mbr-tools",
+    host=host,
+    port=port,
+    stateless_http=True,
+)
 
 register_powerpoint_tools(mcp)
 register_library_tools(mcp)
 
 
 def main() -> None:
-    host = os.environ.get("HOST", "0.0.0.0")
-    port = int(os.environ.get("PORT", "8080"))
-    logger.info("Starting FastMCP server on %s:%s", host, port)
-    mcp.run(transport="streamable-http", host=host, port=port)
+    logger.info("Starting MCP server on %s:%s", host, port)
+    mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":

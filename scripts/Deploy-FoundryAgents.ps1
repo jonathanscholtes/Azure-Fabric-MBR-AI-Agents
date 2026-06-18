@@ -85,7 +85,7 @@ if (-not $ProjectEndpoint -or -not $McpServerUrl -or -not $KeyVaultUri) {
         $ProjectEndpoint = $tfOut.foundry_project_endpoint.value
     }
     if (-not $McpServerUrl -and $tfOut -and $tfOut.mcp_tools_api_fqdn) {
-        $McpServerUrl = "https://$($tfOut.mcp_tools_api_fqdn.value)"
+        $McpServerUrl = "https://$($tfOut.mcp_tools_api_fqdn.value)/mcp"
     }
     if (-not $KeyVaultUri -and $tfOut -and $tfOut.key_vault_uri) {
         $KeyVaultUri = $tfOut.key_vault_uri.value
@@ -181,17 +181,17 @@ if (-not $script:RgName) {
 }
 
 if ($script:RgName) {
-    Write-Info "Injecting agent IDs into ca-mbr-api (RG: $($script:RgName))..."
+    Write-Info "Injecting agent names into ca-mbr-api (RG: $($script:RgName))..."
     az containerapp update `
         --name           "ca-mbr-api" `
         --resource-group $script:RgName `
-        --set-env-vars   "CONVERSATIONAL_AGENT_ID=$convId" "MBR_PRESENTATION_AGENT_ID=$presId" `
+        --set-env-vars   "CONVERSATIONAL_AGENT_NAME=$convId" "MBR_PRESENTATION_AGENT_NAME=$presId" `
         --output         none
     if ($LASTEXITCODE -ne 0) { throw "az containerapp update failed (exit $LASTEXITCODE)" }
-    Write-Success "Agent IDs injected into ca-mbr-api."
+    Write-Success "Agent names injected into ca-mbr-api."
 } else {
     Write-Warn "resource_group_name not available - skipping Container App update."
     Write-Info "Set manually:"
-    Write-Info "  CONVERSATIONAL_AGENT_ID    = $convId"
-    Write-Info "  MBR_PRESENTATION_AGENT_ID  = $presId"
+    Write-Info "  CONVERSATIONAL_AGENT_NAME = $convId"
+    Write-Info "  MBR_PRESENTATION_AGENT_NAME = $presId"
 }

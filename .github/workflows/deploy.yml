@@ -205,7 +205,7 @@ jobs:
             --model-deployment       ${{ needs.infra.outputs.model_deployment }} \
             --mini-model-deployment  ${{ needs.infra.outputs.mini_model_deployment }} \
             --key-vault-uri          ${{ needs.infra.outputs.key_vault_uri }} \
-            --mcp-server-url         https://${{ needs.infra.outputs.mcp_fqdn }} \
+            --mcp-server-url         https://${{ needs.infra.outputs.mcp_fqdn }}/mcp \
             --output                 agents/agent_ids.json
 
       - name: Inject agent names into ca-mbr-api
