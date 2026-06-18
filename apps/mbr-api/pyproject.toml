@@ -15,6 +15,7 @@ dependencies = [
     "azure-identity>=1.19",
     "azure-storage-blob>=12.23",
     "azure-ai-projects==2.0.0b2",
+    "openai>=1.66.0,<2.0.0",
     "pyodbc>=5.2",
     "openpyxl>=3.1",
     "aiohttp>=3.9.0",

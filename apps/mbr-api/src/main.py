@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,44 @@ from .routes.downloads import router as downloads_router
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("mbr-api")
 
-app = FastAPI(title="mbr-api", description="LONGHAUL MBR AI Agents REST API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if not settings.FOUNDRY_PROJECT_ENDPOINT:
+        logger.warning(
+            "FOUNDRY_PROJECT_ENDPOINT is not set — Foundry client will not be initialised. "
+            "Conversation and presentation endpoints will fail."
+        )
+        app.state.foundry_client = None
+    else:
+        try:
+            from azure.ai.projects.aio import AIProjectClient
+            from azure.identity import ManagedIdentityCredential
+
+            credential = ManagedIdentityCredential(
+                client_id=settings.AZURE_CLIENT_ID if settings.AZURE_CLIENT_ID else None
+            )
+            app.state.foundry_client = AIProjectClient(
+                endpoint=settings.FOUNDRY_PROJECT_ENDPOINT,
+                credential=credential,
+            )
+            logger.info("Foundry client initialised for endpoint: %s", settings.FOUNDRY_PROJECT_ENDPOINT)
+        except Exception as exc:
+            logger.exception("Failed to initialise Foundry client: %s", exc)
+            app.state.foundry_client = None
+
+    yield
+
+    if getattr(app.state, "foundry_client", None) is not None:
+        await app.state.foundry_client.close()
+        logger.info("Foundry client closed.")
+
+
+app = FastAPI(
+    title="mbr-api",
+    description="LONGHAUL MBR AI Agents REST API",
+    lifespan=lifespan,
+)
 
 # ── CORS — must be added before any routes ────────────────────────────────────
 app.add_middleware(
@@ -38,34 +76,3 @@ app.include_router(templates_router)
 app.include_router(conversations_router)
 app.include_router(presentations_router)
 app.include_router(downloads_router)
-
-
-# ── Startup: initialise Foundry client ───────────────────────────────────────
-@app.on_event("startup")
-async def startup() -> None:
-    """Initialise the Azure AI Projects client and store it on app.state."""
-    if not settings.FOUNDRY_PROJECT_ENDPOINT:
-        logger.warning(
-            "FOUNDRY_PROJECT_ENDPOINT is not set — Foundry client will not be initialised. "
-            "Conversation and presentation endpoints will fail."
-        )
-        app.state.foundry_client = None
-        return
-
-    try:
-        from azure.ai.projects import AIProjectClient
-        from azure.identity import ManagedIdentityCredential
-
-        credential = ManagedIdentityCredential(
-            client_id=settings.AZURE_CLIENT_ID if settings.AZURE_CLIENT_ID else None
-        )
-        app.state.foundry_client = AIProjectClient(
-            endpoint=settings.FOUNDRY_PROJECT_ENDPOINT,
-            credential=credential,
-        )
-        logger.info(
-            "Foundry client initialised for endpoint: %s", settings.FOUNDRY_PROJECT_ENDPOINT
-        )
-    except Exception as exc:
-        logger.exception("Failed to initialise Foundry client: %s", exc)
-        app.state.foundry_client = None

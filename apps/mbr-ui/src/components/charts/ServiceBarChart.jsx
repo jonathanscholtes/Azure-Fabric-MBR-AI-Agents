@@ -18,12 +18,12 @@ export default function ServiceBarChart({ data }) {
         />
         <YAxis
           type="category"
-          dataKey="label"
+          dataKey="vehicle_type"
           tick={{ fontSize: 11 }}
           width={80}
         />
         <Tooltip formatter={v => [`${v}%`, 'On-Time']} />
-        <Bar dataKey="value" fill="var(--color-brand-accent)" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="pct" fill="var(--accent)" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

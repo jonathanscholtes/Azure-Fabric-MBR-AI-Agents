@@ -61,6 +61,7 @@ export default function ConversationPanel({ period, region, messages, isPending,
               <span className="typing-indicator">
                 <span /><span /><span />
               </span>
+              <span className="typing-label">Thinking…</span>
             </span>
           </div>
         )}

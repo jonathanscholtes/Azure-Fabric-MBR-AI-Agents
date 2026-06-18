@@ -208,14 +208,14 @@ jobs:
             --mcp-server-url         https://${{ needs.infra.outputs.mcp_fqdn }} \
             --output                 agents/agent_ids.json
 
-      - name: Inject agent IDs into ca-mbr-api
+      - name: Inject agent names into ca-mbr-api
         run: |
-          CONV_ID=$(python -c "import json; d=json.load(open('agents/agent_ids.json')); print(d['longhaul-conversational-agent'])")
-          PRES_ID=$(python -c "import json; d=json.load(open('agents/agent_ids.json')); print(d['longhaul-mbr-presentation-agent'])")
+          CONV_NAME=$(python -c "import json; d=json.load(open('agents/agent_ids.json')); print([k for k in d if 'conversational' in k][0])")
+          PRES_NAME=$(python -c "import json; d=json.load(open('agents/agent_ids.json')); print([k for k in d if 'presentation' in k][0])")
           az containerapp update \
             --name ca-mbr-api \
             --resource-group ${{ needs.infra.outputs.resource_group }} \
-            --set-env-vars "CONVERSATIONAL_AGENT_ID=$CONV_ID" "MBR_PRESENTATION_AGENT_ID=$PRES_ID" \
+            --set-env-vars "CONVERSATIONAL_AGENT_NAME=$CONV_NAME" "MBR_PRESENTATION_AGENT_NAME=$PRES_NAME" \
             --output none
 
   # ── Summary ─────────────────────────────────────────────────────────────────

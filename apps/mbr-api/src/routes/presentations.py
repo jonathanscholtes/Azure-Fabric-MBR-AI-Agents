@@ -34,37 +34,33 @@ def _parse_period_label(period: str) -> str:
     return period
 
 
-def _run_mbr_presentation_agent(
-    client: Any,
+def _agent_ref(agent_name: str) -> dict:
+    """Build an agent_reference body. Handles optional 'name:version' format."""
+    if ":" in agent_name:
+        ref_name, ref_version = agent_name.rsplit(":", 1)
+    else:
+        ref_name, ref_version = agent_name, None
+    ref: dict = {"type": "agent_reference", "name": ref_name}
+    if ref_version:
+        ref["version"] = ref_version
+    return ref
+
+
+async def _run_mbr_presentation_agent(
+    openai_client: Any,
     period: str,
     region: str,
 ) -> dict:
-    """Synchronous one-shot Foundry agent call for MBR generation."""
-    # Fresh one-shot thread per generation request
-    thread = client.agents.create_thread()
-
-    client.agents.create_message(
-        thread_id=thread.id,
-        role="user",
-        content=f"Generate the MBR deck for {period}, region: {region}.",
+    """One-shot Foundry agent call for MBR generation via the Responses protocol."""
+    response = await openai_client.responses.create(
+        input=f"Generate the MBR deck for {period}, region: {region}.",
+        extra_body={"agent_reference": _agent_ref(settings.MBR_PRESENTATION_AGENT_NAME)},
     )
 
-    run = client.agents.create_and_process_run(
-        thread_id=thread.id,
-        agent_id=settings.MBR_PRESENTATION_AGENT_ID,
-        additional_instructions=(
-            f'Current context: {{"period": "{period}", "region": "{region}"}}'
-        ),
-    )
+    if response.status != "completed":
+        raise RuntimeError(f"Agent run ended with status: {response.status}")
 
-    if run.status != "completed":
-        raise RuntimeError(f"Agent run ended with status: {run.status}")
-
-    messages = client.agents.list_messages(thread_id=thread.id)
-    last = messages.get_last_message_by_role("assistant")
-    response_text = last.content[0].text.value
-
-    return parse_agent_json(response_text)
+    return parse_agent_json(response.output_text or "")
 
 
 @router.post("/presentations", response_model=PresentationResponse)
@@ -76,16 +72,15 @@ async def generate_presentation(
     Persists deck metadata to Storage and returns the response to the browser.
     """
     client = _get_foundry_client(request)
+    if client is None:
+        raise HTTPException(status_code=503, detail="Foundry client not initialised")
+
     period_label = _parse_period_label(body.period)
+    openai_client = client.get_openai_client()
 
     try:
         agent_result = await asyncio.wait_for(
-            asyncio.to_thread(
-                _run_mbr_presentation_agent,
-                client,
-                period_label,
-                body.region,
-            ),
+            _run_mbr_presentation_agent(openai_client, period_label, body.region),
             timeout=240.0,
         )
     except asyncio.TimeoutError as exc:

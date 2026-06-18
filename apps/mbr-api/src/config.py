@@ -15,8 +15,8 @@ class Settings(BaseSettings):
 
     # Azure AI Foundry
     FOUNDRY_PROJECT_ENDPOINT: str = ""
-    CONVERSATIONAL_AGENT_ID: str = ""
-    MBR_PRESENTATION_AGENT_ID: str = ""
+    CONVERSATIONAL_AGENT_NAME: str = ""
+    MBR_PRESENTATION_AGENT_NAME: str = ""
 
     # Managed Identity client ID (injected by ACA)
     AZURE_CLIENT_ID: str = ""

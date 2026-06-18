@@ -1,6 +1,6 @@
 """FastMCP tool server for LONGHAUL MBR — PowerPoint generation and deck library.
 
-Runs on ACA internal ingress (port 8080). Accessible only by Foundry agents.
+Runs on ACA internal ingress (port 80). Accessible only by Foundry agents.
 
 Tools:
   - get_template_slides   (read)   — pre-rendered template slide thumbnails

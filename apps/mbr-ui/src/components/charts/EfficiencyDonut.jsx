@@ -21,8 +21,8 @@ export default function EfficiencyDonut({ value }) {
           dataKey="value"
           strokeWidth={0}
         >
-          <Cell fill="var(--color-brand-accent)" />
-          <Cell fill="var(--color-border)" />
+          <Cell fill="var(--accent)" />
+          <Cell fill="var(--border)" />
         </Pie>
       </PieChart>
       <div style={{

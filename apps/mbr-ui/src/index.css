@@ -737,7 +737,7 @@ button { font-family: inherit; }
   border-radius: 3px 10px 10px 10px;
 }
 
-.message--pending .message-content { color: var(--muted); }
+.message--pending .message-content { color: var(--muted); display: flex; align-items: center; }
 
 .conversation-input {
   display: flex;
@@ -1143,14 +1143,16 @@ button { font-family: inherit; }
 @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
 .typing-indicator { display: inline-flex; gap: 4px; align-items: center; padding: 4px 2px; }
 .typing-indicator span {
-  width: 6px; height: 6px;
+  width: 7px; height: 7px;
   border-radius: 50%;
-  background: var(--muted-2);
+  background: var(--accent);
   display: inline-block;
   animation: bounce 1.2s infinite;
+  opacity: 0.85;
 }
 .typing-indicator span:nth-child(2) { animation-delay: .2s; }
 .typing-indicator span:nth-child(3) { animation-delay: .4s; }
+.typing-label { font-size: 12px; color: var(--muted); margin-left: 6px; font-style: italic; }
 
 /* =========================================================
    Scrollbar styling

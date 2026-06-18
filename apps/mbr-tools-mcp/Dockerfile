@@ -15,8 +15,8 @@ RUN pip install --no-cache-dir -e .
 COPY src/ ./src/
 
 ENV HOST=0.0.0.0
-ENV PORT=8080
+ENV PORT=80
 
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["python", "-m", "src.main"]

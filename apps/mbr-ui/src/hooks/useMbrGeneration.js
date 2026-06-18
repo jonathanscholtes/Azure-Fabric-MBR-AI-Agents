@@ -17,7 +17,7 @@ export function useMbrGeneration(period, region) {
 
   const templateSlidesQuery = useQuery({
     queryKey: ['template-slides'],
-    queryFn: () => api.get('/templates/default/slides'),
+    queryFn: () => api.get('/templates/mbr_template/slides'),
     staleTime: 30 * 60 * 1000,
   });
 

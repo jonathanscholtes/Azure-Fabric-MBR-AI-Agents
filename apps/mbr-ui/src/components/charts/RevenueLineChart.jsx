@@ -10,18 +10,18 @@ export default function RevenueLineChart({ data }) {
   return (
     <ResponsiveContainer width="100%" height={160}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-        <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="period" tick={{ fontSize: 11 }} />
         <YAxis
-          tickFormatter={v => `$${(v / 1e6).toFixed(1)}M`}
+          tickFormatter={v => `$${v.toFixed(1)}M`}
           tick={{ fontSize: 11 }}
           width={52}
         />
-        <Tooltip formatter={v => [`$${(v / 1e6).toFixed(2)}M`, 'Revenue']} />
+        <Tooltip formatter={v => [`$${v.toFixed(2)}M`, 'Revenue']} />
         <Line
           type="monotone"
           dataKey="revenue"
-          stroke="var(--color-brand-accent)"
+          stroke="var(--accent)"
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 4 }}

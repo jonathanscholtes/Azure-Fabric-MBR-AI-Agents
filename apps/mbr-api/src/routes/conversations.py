@@ -19,56 +19,58 @@ logger = logging.getLogger("mbr-api.routes.conversations")
 
 router = APIRouter()
 
-# In-memory thread map: { ui_thread_id: foundry_thread_id }
+# In-memory map: { ui_thread_id: foundry_conversation_id }
 # Suitable for PoC with a single ACA replica.
-_thread_map: dict[str, str] = {}
+_session_conversations: dict[str, str] = {}
 
 
-def _get_foundry_client(request: Request):
+def _get_foundry_client(request: Request) -> Any:
     return request.app.state.foundry_client
 
 
-def get_or_create_foundry_thread(client: Any, ui_thread_id: str) -> str:
-    """Return existing Foundry thread ID for this UI thread, or create a new one."""
-    if ui_thread_id not in _thread_map:
-        thread = client.agents.create_thread()
-        _thread_map[ui_thread_id] = thread.id
-        logger.info("Created Foundry thread %s for UI thread %s", thread.id, ui_thread_id)
-    return _thread_map[ui_thread_id]
+def _agent_ref(agent_name: str) -> dict:
+    """Build an agent_reference body. Handles optional 'name:version' format."""
+    if ":" in agent_name:
+        ref_name, ref_version = agent_name.rsplit(":", 1)
+    else:
+        ref_name, ref_version = agent_name, None
+    ref: dict = {"type": "agent_reference", "name": ref_name}
+    if ref_version:
+        ref["version"] = ref_version
+    return ref
 
 
-def _run_conversational_agent(
-    client: Any,
+async def _get_or_create_conversation(openai_client: Any, ui_thread_id: str) -> str:
+    """Return existing Foundry conversation ID for this UI thread, or create a new one."""
+    if ui_thread_id not in _session_conversations:
+        conv = await openai_client.conversations.create()
+        _session_conversations[ui_thread_id] = conv.id
+        logger.info("Created Foundry conversation %s for UI thread %s", conv.id, ui_thread_id)
+    return _session_conversations[ui_thread_id]
+
+
+async def _run_conversational_agent(
+    openai_client: Any,
     ui_thread_id: str,
     message: str,
     period: str,
     region: str,
 ) -> dict:
-    """Synchronous Foundry agent call — run in a thread via asyncio.to_thread."""
-    foundry_thread_id = get_or_create_foundry_thread(client, ui_thread_id)
+    """Invoke the Conversational Agent via the Responses protocol."""
+    conv_id = await _get_or_create_conversation(openai_client, ui_thread_id)
 
-    client.agents.create_message(
-        thread_id=foundry_thread_id,
-        role="user",
-        content=message,
+    input_text = f"[Context: period='{period}', region='{region}']\n{message}"
+
+    response = await openai_client.responses.create(
+        input=input_text,
+        conversation=conv_id,
+        extra_body={"agent_reference": _agent_ref(settings.CONVERSATIONAL_AGENT_NAME)},
     )
 
-    run = client.agents.create_and_process_run(
-        thread_id=foundry_thread_id,
-        agent_id=settings.CONVERSATIONAL_AGENT_ID,
-        additional_instructions=(
-            f'Current context: {{"period": "{period}", "region": "{region}"}}'
-        ),
-    )
+    if response.status != "completed":
+        raise RuntimeError(f"Agent run ended with status: {response.status}")
 
-    if run.status != "completed":
-        raise RuntimeError(f"Agent run ended with status: {run.status}")
-
-    messages = client.agents.list_messages(thread_id=foundry_thread_id)
-    last = messages.get_last_message_by_role("assistant")
-    response_text = last.content[0].text.value
-
-    return parse_agent_json(response_text)
+    return parse_agent_json(response.output_text or "")
 
 
 def _parse_period_label(period: str) -> str:
@@ -88,13 +90,16 @@ async def post_conversation(body: ConversationRequest, request: Request) -> Conv
     Persists the conversation turn to Azure Storage.
     """
     client = _get_foundry_client(request)
+    if client is None:
+        raise HTTPException(status_code=503, detail="Foundry client not initialised")
+
     period_label = _parse_period_label(body.period)
+    openai_client = client.get_openai_client()
 
     try:
         agent_result = await asyncio.wait_for(
-            asyncio.to_thread(
-                _run_conversational_agent,
-                client,
+            _run_conversational_agent(
+                openai_client,
                 body.thread_id,
                 body.message,
                 period_label,
@@ -134,7 +139,6 @@ async def post_conversation(body: ConversationRequest, request: Request) -> Conv
     key_drivers_raw = agent_result.get("key_drivers", [])
     analytics_raw = agent_result.get("analytics", {})
 
-    # Normalise key_drivers — allow partial dicts
     from ..models import KeyDriver, AnalyticsPayload, RevenuePerformanceData, CostManagementData
     from ..models import OperationalEfficiencyData, ServicePerformanceData, BottomLineData
 
@@ -183,12 +187,11 @@ async def list_conversations() -> dict:
         logger.exception("Storage list_blobs failed: %s", exc)
         raise HTTPException(status_code=500, detail="Storage access failed") from exc
 
-    # Group blobs by thread_id (first path segment)
     thread_blobs: dict[str, list[str]] = {}
     for blob_name in all_blobs:
         parts = blob_name.split("/", 1)
         if len(parts) == 2:
-            thread_id, rest = parts
+            thread_id, _ = parts
             thread_blobs.setdefault(thread_id, []).append(blob_name)
 
     items: list[ThreadSummary] = []
@@ -215,7 +218,6 @@ async def list_conversations() -> dict:
             )
         )
 
-    # Sort by last_updated descending
     items.sort(key=lambda t: t.last_updated, reverse=True)
     return {"items": [item.model_dump() for item in items]}
 
