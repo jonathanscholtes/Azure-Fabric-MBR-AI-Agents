@@ -1,64 +1,90 @@
-import { useState } from 'react';
-import KpiSummaryBar from '../components/KpiSummaryBar';
-import ConversationPanel from '../components/ConversationPanel';
-import AnalyticsPanel from '../components/AnalyticsPanel';
-import PresentationPanel from '../components/PresentationPanel';
-import { useConversation } from '../hooks/useConversation';
+import KpiSummaryBar from '../components/KpiSummaryBar'
+import ConversationPanel from '../components/ConversationPanel'
+import AnalyticsPanel from '../components/AnalyticsPanel'
+import PresentationPanel from '../components/PresentationPanel'
+import { useConversation } from '../hooks/useConversation'
 
-const PERIODS = [
-  'May 2025', 'Apr 2025', 'Mar 2025', 'Feb 2025', 'Jan 2025',
-  'Dec 2024', 'Nov 2024', 'Oct 2024', 'Sep 2024', 'Aug 2024',
-  'Jul 2024', 'Jun 2024', 'May 2024',
-];
+const MON_ABBR = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 }
+const FULL_MON = ['','January','February','March','April','May','June','July','August','September','October','November','December']
 
-const REGIONS = ['North', 'South', 'East', 'West', 'Central'];
+function periodDateRange(period) {
+  const parts = period.split(' ')
+  if (parts.length !== 2) return period
+  const mon = MON_ABBR[parts[0]]
+  const yr  = parseInt(parts[1])
+  if (!mon || !yr) return period
+  const lastDay = new Date(yr, mon, 0).getDate()
+  return `${FULL_MON[mon]} 1 – ${FULL_MON[mon]} ${lastDay}, ${yr}`
+}
 
-export default function Dashboard() {
-  const [period, setPeriod] = useState('May 2025');
-  const [region, setRegion] = useState('North');
-
-  const { threadId, messages, isPending, send } = useConversation(period, region);
+export default function Dashboard({ period, region }) {
+  const { messages, isPending, send } = useConversation(period, region)
 
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <div className="page-title">
-          <h1>MBR Dashboard</h1>
-          <span className="page-subtitle">Jonathan Scholtes</span>
-        </div>
-        <div className="page-filters">
-          <select value={period} onChange={e => setPeriod(e.target.value)}>
-            {PERIODS.map(p => <option key={p}>{p}</option>)}
-          </select>
-          <select value={region} onChange={e => setRegion(e.target.value)}>
-            {REGIONS.map(r => <option key={r}>{r}</option>)}
-          </select>
-        </div>
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
 
+      {/* ── MBR Executive Summary header with trucking photo ── */}
+      <div className="mbr-header">
+        <img src="/trucking_photo.png" alt="" className="mbr-header-photo" />
+        <div className="mbr-header-overlay" />
+        <div className="mbr-header-content">
+          <div className="mbr-header-title-block">
+            <span className="mbr-header-label">LONGHAUL INSIGHTS</span>
+            <span className="mbr-header-title">MBR Executive Summary</span>
+            <span className="mbr-header-subtitle">
+              {periodDateRange(period)} &nbsp;&middot;&nbsp; {region} Region
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── KPI bar ── */}
       <KpiSummaryBar period={period} region={region} />
 
-      <div className="dashboard-grid">
-        <section className="dashboard-cell dashboard-cell--analytics">
-          <AnalyticsPanel period={period} region={region} />
-        </section>
+      {/* ── Three panels ── */}
+      <div className="three-panel" style={{ flex: 1, minHeight: 0 }}>
 
-        <section className="dashboard-cell dashboard-cell--conversation">
-          <h2 className="section-title">AI Assistant</h2>
-          <ConversationPanel
-            period={period}
-            region={region}
-            threadId={threadId}
-            messages={messages}
-            isPending={isPending}
-            onSend={send}
-          />
-        </section>
+        {/* MBR Conversation */}
+        <div className="panel-col">
+          <div className="panel-col-header">
+            <span className="panel-col-title">MBR Conversation</span>
+            {messages.length > 0 && (
+              <span className="panel-col-badge">{messages.length}</span>
+            )}
+          </div>
+          <div className="panel-col-body panel-col-body--conversation">
+            <ConversationPanel
+              period={period}
+              region={region}
+              messages={messages}
+              isPending={isPending}
+              onSend={send}
+            />
+          </div>
+        </div>
 
-        <section className="dashboard-cell dashboard-cell--presentation">
-          <PresentationPanel period={period} region={region} />
-        </section>
+        {/* Analytics & Reasoning */}
+        <div className="panel-col">
+          <div className="panel-col-header">
+            <span className="panel-col-title">Analytics &amp; Reasoning</span>
+            <button className="panel-col-link">View Full Analysis →</button>
+          </div>
+          <div className="panel-col-body">
+            <AnalyticsPanel period={period} region={region} />
+          </div>
+        </div>
+
+        {/* MBR Presentation */}
+        <div className="panel-col">
+          <div className="panel-col-header">
+            <span className="panel-col-title">MBR Presentation</span>
+          </div>
+          <div className="panel-col-body">
+            <PresentationPanel period={period} region={region} />
+          </div>
+        </div>
+
       </div>
     </div>
-  );
+  )
 }
