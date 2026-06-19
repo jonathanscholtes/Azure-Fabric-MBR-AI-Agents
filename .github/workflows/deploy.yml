@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  TF_STATE_RG: rg-tfstate-mbr
+
 permissions:
   id-token: write
   contents: read
@@ -62,11 +65,17 @@ jobs:
         with:
           terraform_version: "1.9"
 
+      - name: Derive TF state storage name
+        run: |
+          SUB_ID=$(az account show --query id -o tsv)
+          SUFFIX=${SUB_ID//-/}
+          echo "TF_STATE_STORAGE=stotfmbr${SUFFIX:0:8}" >> $GITHUB_ENV
+
       - name: Terraform init
         run: |
           terraform -chdir=infra init \
-            -backend-config="resource_group_name=${{ vars.TF_STATE_RG }}" \
-            -backend-config="storage_account_name=${{ vars.TF_STATE_SA }}" \
+            -backend-config="resource_group_name=${{ env.TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ env.TF_STATE_STORAGE }}" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=dev.tfstate"
 
@@ -113,11 +122,17 @@ jobs:
           terraform_version: "1.9"
           terraform_wrapper: false
 
+      - name: Derive TF state storage name
+        run: |
+          SUB_ID=$(az account show --query id -o tsv)
+          SUFFIX=${SUB_ID//-/}
+          echo "TF_STATE_STORAGE=stotfmbr${SUFFIX:0:8}" >> $GITHUB_ENV
+
       - name: Terraform init (read-only)
         run: |
           terraform -chdir=infra init \
-            -backend-config="resource_group_name=${{ vars.TF_STATE_RG }}" \
-            -backend-config="storage_account_name=${{ vars.TF_STATE_SA }}" \
+            -backend-config="resource_group_name=${{ env.TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ env.TF_STATE_STORAGE }}" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=dev.tfstate"
 
