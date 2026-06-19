@@ -139,13 +139,10 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
 } else {
     Write-Host "`nWriting secrets to $Repo..." -ForegroundColor Cyan
 
-    # OIDC identifiers are not sensitive — write as repo variables (vars.*) so
-    # the workflow can reference them as ${{ vars.AZURE_CLIENT_ID }} etc.
-    gh variable set AZURE_CLIENT_ID       --body $clientId       --repo $Repo
-    gh variable set AZURE_TENANT_ID       --body $tenantId       --repo $Repo
-    gh variable set AZURE_SUBSCRIPTION_ID --body $subscriptionId --repo $Repo
+    gh secret set AZURE_CLIENT_ID       --body $clientId       --repo $Repo
+    gh secret set AZURE_TENANT_ID       --body $tenantId       --repo $Repo
+    gh secret set AZURE_SUBSCRIPTION_ID --body $subscriptionId --repo $Repo
 
-    # SP object ID is used by Terraform for role assignments — keep as a secret
     $spObjectId = az ad sp show --id $clientId --query id -o tsv 2>$null
     if ($spObjectId) {
         gh secret set AZURE_SP_OBJECT_ID --body $spObjectId --repo $Repo
