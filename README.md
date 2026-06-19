@@ -1,20 +1,22 @@
-# MBR AI Agents with Microsoft Fabric and Foundry
-### End-to-End Example: Conversational KPI Analysis and Automated Presentation Generation
+# Conversational Agents for Operational Data with Microsoft Fabric and Foundry
+### End-to-End Example: Natural-Language Insight Discovery and Presentation Generation
 
-This project demonstrates how to build an **AI-powered Monthly Business Review (MBR) platform** using Microsoft Fabric Data Agents, Microsoft Foundry, and Azure Container Apps — where conversational agents answer questions about live operational data and a presentation agent generates a completed PowerPoint deck on demand.
+> [!WARNING]
+> This project is currently in active development and may contain breaking changes. Updates and modifications are being made frequently, which may impact stability or functionality. This notice will be removed once the project reaches a stable release.
 
-> Fabric Lakehouse → **Conversational Agent** answers questions about operational KPIs → **Presentation Agent** generates a completed PowerPoint MBR deck
+This project demonstrates how to connect **Microsoft Fabric structured data** to **Microsoft Foundry agents** — enabling natural-language conversations over live operational data and automated, template-consistent PowerPoint generation via MCP tooling.
+
+> Fabric Lakehouse → **Conversational Agent** surfaces insights through natural language → **Presentation Agent** generates a PowerPoint deck via MCP
 
 ---
 
 ## Contents
 
 - [Start Here](#start-here)
-- [What It Demonstrates](#what-it-demonstrates)
+- [Patterns This Project Demonstrates](#patterns-this-project-demonstrates)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Deployment](#deployment)
-- [Post-Deployment: Manual Fabric Steps](#post-deployment-manual-fabric-steps)
 - [Configuration](#configuration)
 - [Security Model](#security-model)
 - [GitHub Actions](#github-actions)
@@ -22,40 +24,49 @@ This project demonstrates how to build an **AI-powered Monthly Business Review (
 
 ---
 
+![LONGHAUL dashboard — KPI summary bar, conversational agent chat, analytics panel, and on-demand presentation generation](media/ui_screenshot.png)
+
+*Example scenario: the LONGHAUL operational dashboard. Left — conversational agent answering a question about operating margin. Centre — KPI summary and analytics charts. Right — on-demand presentation generation.*
+
+---
+
 ## Start Here
 
 If you're exploring:
 
-- How to connect **Microsoft Fabric Lakehouse** data to **AI Foundry agents**
-- How to use the **Fabric Data Agent** as a natural-language interface to structured data
-- How to automate **PowerPoint report generation** from live data using MCP tools and agents
+- How to connect **Microsoft Fabric Lakehouse** data to **Microsoft Foundry agents** without writing SQL in prompts
+- How to use the **Fabric Data Agent** as a natural-language interface to structured operational data
+- How to orchestrate **multi-turn conversational agents** that reason over live data
+- How to drive **template-consistent PowerPoint generation** from agent output via MCP tooling
 - How to build a **full-stack AI platform** on Azure Container Apps with managed identity
 
-→ this project provides a complete, working reference implementation.
+→ this project provides a complete, working reference implementation of all three patterns.
 
-The example scenario is **LONGHAUL** — a fictional long-haul trucking company with 13 months of operational KPI data across 5 regions and 20 vehicle types. The trucking domain is interchangeable; the pattern is what matters.
+> **The scenario is an example, not the product.** The example uses **LONGHAUL** — a fictional long-haul trucking company with 13 months of operational KPI data across 5 regions and 20 vehicle types. The domain is interchangeable; the patterns are what matter.
+
+
 
 ---
 
-## What It Demonstrates
+## Patterns This Project Demonstrates
 
 ### Pattern 1 — Fabric Data Agent as an AI data interface
 
-Rather than writing SQL in agent prompts or hardcoding queries, this project uses the **Fabric Data Agent** as a dedicated natural-language interface to the Lakehouse. Foundry agents call it like a tool — asking questions in plain English and receiving structured answers drawn directly from live data. No SQL knowledge required by the agent.
+Rather than writing SQL in agent prompts or hardcoding queries, this project uses the **Fabric Data Agent** as a dedicated natural-language interface to the Lakehouse. Foundry agents call it like a tool — asking questions in plain English and receiving structured answers drawn directly from live data. The agent needs no SQL knowledge; Fabric handles the translation.
 
-### Pattern 2 — Agent-driven report generation via MCP
+### Pattern 2 — Orchestrated agent reasoning over live operational data
 
-The **MBR Presentation Agent** orchestrates a two-step workflow: retrieve KPIs from the Fabric Data Agent, then call an MCP tool (`fill_mbr_template`) that fills a PowerPoint template with `python-pptx`, uploads the completed deck to Azure Blob Storage, and returns a download URL. The agent drives the entire flow.
+The **Conversational Agent** maintains multi-turn threads, allowing users to explore trends, compare dimensions, and drill into drivers — all grounded in live Fabric data rather than static context or pre-computed summaries. Foundry manages thread state and tool routing.
 
-### Pattern 3 — Conversational analytics with thread persistence
+### Pattern 3 — MCP-driven presentation generation
 
-The **Conversational Agent** maintains multi-turn threads, allowing users to ask follow-up questions about performance trends, regional comparisons, and cost drivers — all grounded in live Fabric data rather than static context.
+The **Presentation Agent** orchestrates a two-step workflow: retrieve KPIs from the Fabric Data Agent, then invoke an MCP tool (`fill_mbr_template`) that fills a PowerPoint template with `python-pptx`, uploads the completed deck to Azure Blob Storage, and returns a download URL. The agent drives the entire flow; the MCP tool enforces template consistency — every generated deck follows the same structure.
 
 ### Adapt this to your domain
 
-The LONGHAUL trucking scenario is interchangeable. The same pattern applies to:
+The LONGHAUL trucking scenario is a worked example. The same three patterns apply to any domain with structured operational data and a recurring reporting need:
 
-- **Retail** → monthly sales performance, inventory KPIs, regional breakdown
+- **Retail** → sales performance, inventory KPIs, regional breakdown
 - **Healthcare** → operational metrics, patient outcomes, cost-per-procedure
 - **Financial services** → portfolio performance, risk metrics, client reporting
 - **Manufacturing** → production efficiency, downtime analysis, quality metrics
@@ -122,7 +133,7 @@ Azure-Fabric-MBR-AI-Agents/
 ├── README.md                           # This file
 │
 ├── agents/                             # Foundry agent definitions + deployer
-│   ├── deploy.py                       # Creates / updates both agents, writes IDs to Key Vault
+│   ├── deploy.py                       # Creates / updates both agents, writes IDs to agents/agent_ids.json
 │   ├── conversational_agent.py         # Conversational agent definition
 │   └── mbr_presentation_agent.py      # MBR presentation agent definition
 │
@@ -187,36 +198,7 @@ Azure-Fabric-MBR-AI-Agents/
 
 ## Deployment
 
-### Prerequisites
-
-| Tool | Version | Notes |
-|---|---|---|
-| Azure CLI | Latest | `az login` authenticated |
-| Terraform | ≥ 1.9 | Infrastructure as Code |
-| PowerShell | 7+ | Required for deployment scripts |
-| Python | 3.12+ | Agent deploy + Lakehouse seed scripts |
-| Node | 20+ | UI build (handled by ACR build — local install optional) |
-
-> Docker is **not** required — container images are built remotely in Azure Container Registry via `az acr build`.
-
-> A **Microsoft Fabric workspace** is required before deployment. See [docs/fabric-setup.md](docs/fabric-setup.md) for setup instructions.
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/jonathanscholtes/Azure-Fabric-MBR-AI-Agents.git
-cd Azure-Fabric-MBR-AI-Agents
-```
-
-### 2. Create the Fabric Workspace and Lakehouse
-
-Follow [docs/fabric-setup.md](docs/fabric-setup.md) (Sections 1–3) to:
-
-1. Create a Fabric workspace — note the **Workspace ID** from the URL
-2. Create Lakehouse `lh_mbr_trucking` — note the **Lakehouse ID**
-3. Copy the **SQL analytics endpoint** hostname
-
-### 3. Deploy Everything (Single Command)
+A Fabric workspace and Lakehouse must exist before running the deploy script — the deployment scripts create all other resources automatically.
 
 ```powershell
 az login
@@ -224,69 +206,12 @@ az account set --subscription "YOUR-SUBSCRIPTION-NAME-OR-ID"
 
 .\deploy.ps1 `
     -Subscription      "YOUR-SUBSCRIPTION-NAME-OR-ID" `
-    -FabricWorkspaceId "<workspace-guid>" `
-    -SetupGitHub
+    -FabricWorkspaceId "<workspace-guid>"
 ```
 
-**The deployment runs six phases automatically:**
+`deploy.ps1` runs six phases automatically — infrastructure, containers, Lakehouse seeding, Fabric Data Agent creation, and Foundry agent deployment (~20–30 min). Two manual steps in the Fabric portal are required after the script completes.
 
-| Phase | Script | What it does |
-|---|---|---|
-| 0 — Bootstrap | *(inline)* | Creates Terraform remote state backend |
-| 1 — Infrastructure | `Deploy-Infrastructure.ps1` | Provisions all Azure resources via Terraform |
-| 2 — Containers | `Deploy-Containers.ps1` | Builds and pushes API, MCP, and UI images to ACR |
-| 3 — Fabric Lakehouse | `Deploy-FabricLakehouse.ps1` | Creates tables, seeds 13 months of KPI data, uploads template |
-| 3b — Fabric Data Agent | `Deploy-FabricDataAgent.ps1` | Creates `da_mbr_trucking`, assigns managed identity workspace access |
-| 4 — Foundry Agents | `Deploy-FoundryAgents.ps1` | Deploys conversational + presentation agents, writes IDs to Key Vault |
-
-**Subsequent deploys** (infrastructure already exists):
-
-```powershell
-.\deploy.ps1 -Subscription "<subscription>" -FabricWorkspaceId "<guid>" -SkipBootstrap
-```
-
-**Resources created (~20–30 min):**
-
-- Microsoft Foundry account + project + GPT-4.1 and GPT-4.1-mini deployments
-- Azure Container Apps environment + mbr-api + mbr-tools-mcp + mbr-ui
-- Azure Container Registry
-- Azure Key Vault + User-assigned Managed Identity
-- Azure Blob Storage (templates, decks, thumbnails, conversations, decks-metadata)
-- Log Analytics Workspace + Application Insights
-
----
-
-## Post-Deployment: Manual Fabric Steps
-
-Two manual steps in the Fabric portal are required after `deploy.ps1` completes. The `Deploy-FabricDataAgent.ps1` script creates the `da_mbr_trucking` agent but the Fabric REST API does not reliably apply data sources and instructions — these must be configured in the portal.
-
-See [docs/fabric-setup.md](docs/fabric-setup.md) (Sections 5b–5d) for the full walkthrough.
-
-**Summary:**
-
-1. Open `da_mbr_trucking` in the Fabric portal
-2. **Add data** → Lakehouse → select `lh_mbr_trucking`
-3. **Agent instructions** → paste the system prompt from [docs/fabric-setup.md §5c](docs/fabric-setup.md#5c-add-agent-instructions-manual--required)
-4. Click **Publish**
-
-> **Fabric Admin prerequisite**: A Fabric administrator must enable **"Allow service principals and managed identities to use Fabric APIs"** under Tenant settings before the managed identity can authenticate. See [docs/fabric-setup.md §6](docs/fabric-setup.md#6-managed-identity-access).
-
----
-
-<details>
-<summary><b>Deployment Validation Checklist</b></summary>
-
-- [ ] `terraform apply` completes with exit 0
-- [ ] Lakehouse tables created and seeded (`fact_monthly_kpis`, `fact_vehicle_kpis`, `dim_month`, `dim_region`, `dim_vehicle_type`)
-- [ ] `mbr_template.pptx` uploaded to the `templates` blob container
-- [ ] `da_mbr_trucking` visible in the Fabric workspace with `lh_mbr_trucking` as a data source and instructions set
-- [ ] Foundry agents `conversational-agent` and `mbr-presentation-agent` visible in the Foundry portal
-- [ ] Agent IDs written to Key Vault
-- [ ] KPI bar loads on the Dashboard with data for `May 2025 / North`
-- [ ] Conversational agent responds to fleet questions in the Chat panel
-- [ ] Clicking **Generate Presentation** triggers a `.pptx` download
-
-</details>
+→ **See [docs/deployment_steps.md](docs/deployment_steps.md) for the full walkthrough**: prerequisites, Fabric workspace setup, all deploy phases, post-deployment portal steps, validation checklist, GitHub Actions, and teardown.
 
 ---
 
@@ -330,7 +255,6 @@ See [docs/fabric-setup.md](docs/fabric-setup.md) (Sections 5b–5d) for the full
 ## Security Model
 
 - All Azure services authenticate via **Managed Identity** — no connection strings or API keys in source control.
-- Agent IDs are stored in **Azure Key Vault** and injected into the Container App at revision creation time.
 - The Fabric SQL analytics endpoint authenticates using an **OAuth 2.0 token** (`https://database.windows.net/.default`) obtained via the managed identity — no SQL username or password.
 - `mbr-tools-mcp` is deployed with **ACA internal ingress only** — it is not reachable from the internet, only from other Container Apps in the same environment.
 - `mbr-api` is the only internet-facing service; the MCP server is never called directly by the UI.

@@ -15,10 +15,15 @@ export function useMbrGeneration(period, region) {
 
   const filename = `MBR-${region ?? 'All'}-${(period ?? '').replace(' ', '')}.pptx`;
 
-  const templateSlidesQuery = useQuery({
-    queryKey: ['template-slides'],
-    queryFn: () => api.get('/templates/mbr_template/slides'),
-    staleTime: 30 * 60 * 1000,
+  const existingDeckQuery = useQuery({
+    queryKey: ['mbr-library', period, region],
+    queryFn: async () => {
+      const data = await api.get('/presentations');
+      const items = data?.items ?? [];
+      return items.find((d) => d.period === period && d.region === region) ?? null;
+    },
+    enabled: !!period && !!region,
+    staleTime: 5 * 60 * 1000,
   });
 
   const generateMutation = useMutation({
@@ -40,5 +45,7 @@ export function useMbrGeneration(period, region) {
     },
   });
 
-  return { templateSlidesQuery, generateMutation, downloadAgainMutation };
+  const activeDeckId = generateMutation.data?.deck_id ?? existingDeckQuery.data?.deck_id ?? null;
+
+  return { existingDeckQuery, generateMutation, downloadAgainMutation, activeDeckId };
 }

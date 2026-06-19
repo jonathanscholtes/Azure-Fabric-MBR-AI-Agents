@@ -33,8 +33,7 @@ const SLIDE_TITLES = [
 ]
 
 export default function PresentationPanel({ period, region }) {
-  const { templateSlidesQuery, generateMutation, downloadAgainMutation } = useMbrGeneration(period, region)
-  const { isLoading: slidesLoading } = templateSlidesQuery
+  const { existingDeckQuery, generateMutation, downloadAgainMutation, activeDeckId } = useMbrGeneration(period, region)
   const {
     mutate: generate,
     isPending: generating,
@@ -67,10 +66,6 @@ export default function PresentationPanel({ period, region }) {
         ))}
       </ul>
 
-      {slidesLoading && (
-        <div className="template-slides--loading">Loading template…</div>
-      )}
-
       {genError && (
         <div className="presentation-error">Generation failed — please try again.</div>
       )}
@@ -96,8 +91,8 @@ export default function PresentationPanel({ period, region }) {
         <button
           className="btn btn-outline"
           style={{ width: '100%' }}
-          disabled={!genResult?.deck_id || downloading}
-          onClick={() => genResult?.deck_id && downloadAgain(genResult.deck_id)}
+          disabled={!activeDeckId || downloading}
+          onClick={() => activeDeckId && downloadAgain(activeDeckId)}
         >
           {downloading
             ? <><span className="spinner" /> Downloading…</>

@@ -1,29 +1,12 @@
 # PowerPoint Templates
 
-Place your MBR PowerPoint template here before deploying.
+Place `mbr_template.pptx` here. The deployment process uploads it to Azure Blob Storage (`templates/mbr_template.pptx`), where the MCP server reads it at runtime.
 
-## Expected file
+## Placeholder names
 
-`data/templates/longhaul-mbr-template.pptx`
+The template uses **shape names** (not text box content) to identify fill targets. Rename shapes via Home → Arrange → Selection Pane.
 
-The mbr-tools-mcp `fill_mbr_template` MCP tool reads this file from Azure Blob
-Storage (`templates/longhaul-mbr-template.pptx`). Upload it using:
-
-```bash
-az storage blob upload \
-    --account-name <storage-account> \
-    --container-name templates \
-    --name longhaul-mbr-template.pptx \
-    --file data/templates/longhaul-mbr-template.pptx \
-    --auth-mode login
-```
-
-## Slide design conventions
-
-The template must use **python-pptx text placeholder names** that match the
-keys the MBR Presentation Agent passes to `fill_mbr_template`:
-
-| Placeholder name | Content |
+| Shape name | Content |
 |---|---|
 | `title` | `LONGHAUL MBR — {Region} — {Period}` |
 | `period` | Period label (e.g. "May 2025") |
@@ -36,9 +19,4 @@ keys the MBR Presentation Agent passes to `fill_mbr_template`:
 | `narrative` | Conversational agent narrative block |
 | `key_drivers` | Bullet list of key drivers |
 
-To add a text placeholder in PowerPoint:
-1. Insert → Text Box → draw the box
-2. Selection Pane (Home → Arrange → Selection Pane) → rename the shape to the
-   placeholder name above
-
-Shapes without matching names are left unchanged.
+Shapes without a matching name are left unchanged.

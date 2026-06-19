@@ -157,7 +157,7 @@ Click **Publish** in the top toolbar. The agent is not active until published.
 
 ### 5e. Fabric connection name
 
-After publishing, the connection name used by AI Foundry is `da_mbr_trucking`.
+After publishing, the connection name used by Microsoft Foundry is `da_mbr_trucking`.
 This must match the value in `agents/deploy.py`:
 ```python
 FABRIC_CONNECTION_NAME = "da_mbr_trucking"
