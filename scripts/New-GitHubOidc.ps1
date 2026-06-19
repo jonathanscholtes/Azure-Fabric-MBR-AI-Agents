@@ -20,9 +20,9 @@
 #>
 
 param (
-    [string] $Repo        = '',
-    [string] $AppName     = 'longhaul-github-actions',
-    [string] $Environment = 'dev'
+    [string] $Repo    = '',
+    [string] $AppName = 'longhaul-github-actions',
+    [string] $Branch  = 'main'
 )
 
 Set-StrictMode -Version Latest
@@ -53,7 +53,7 @@ Write-Host "  Subscription : $subscriptionId"
 Write-Host "  Tenant       : $tenantId"
 Write-Host "  Repo         : $Repo"
 Write-Host "  App name     : $AppName"
-Write-Host "  Environment  : $Environment"
+Write-Host "  Branch       : $Branch"
 
 # ---------------------------------------------------------------------------
 # Create (or reuse) app registration
@@ -96,12 +96,12 @@ foreach ($role in @('Contributor', 'Storage Blob Data Contributor')) {
 }
 
 # ---------------------------------------------------------------------------
-# Federated credential — environment-scoped (matches workflow_dispatch jobs)
+# Federated credential — branch-scoped (matches push/workflow_dispatch on branch)
 # ---------------------------------------------------------------------------
-Write-Host "`nConfiguring federated credential for environment '$Environment'..." -ForegroundColor Cyan
+Write-Host "`nConfiguring federated credential for branch '$Branch'..." -ForegroundColor Cyan
 
-$credName    = "github-$($Repo -replace '[^a-zA-Z0-9]', '-')-$Environment"
-$credSubject = "repo:${Repo}:environment:$Environment"
+$credName    = "github-actions-$($Branch -replace '[^a-zA-Z0-9]', '-')"
+$credSubject = "repo:${Repo}:ref:refs/heads/${Branch}"
 
 $existingCreds = az ad app federated-credential list --id $clientId | ConvertFrom-Json
 $existing = @($existingCreds) | Where-Object {
@@ -159,7 +159,7 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green
-Write-Host "  Done!  OIDC configured for $Repo ($Environment)"           -ForegroundColor Green
+Write-Host "  Done!  OIDC configured for $Repo (branch: $Branch)"        -ForegroundColor Green
 Write-Host ""
 Write-Host "  AZURE_CLIENT_ID       = $clientId"                         -ForegroundColor Green
 Write-Host "  AZURE_TENANT_ID       = $tenantId"                         -ForegroundColor Green

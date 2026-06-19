@@ -15,6 +15,7 @@ End-to-end deployment guide for the Conversational Agents for Operational Data p
 - [Step 4 — Deploy Everything](#step-4--deploy-everything)
 - [Step 5 — Configure the Fabric Data Agent (Manual — Portal)](#step-5--configure-the-fabric-data-agent-manual--portal)
 - [Step 6 — Verify the Deployment](#step-6--verify-the-deployment)
+- [Security Model](#security-model)
 - [GitHub Actions (Optional)](#github-actions-optional)
 - [Teardown](#teardown)
 
@@ -373,6 +374,16 @@ Key outputs:
 - [ ] KPI bar loads on the Dashboard with data for the default period/region
 - [ ] Conversational agent responds to questions in the Chat panel
 - [ ] Clicking **Generate Presentation** triggers a `.pptx` download
+
+---
+
+## Security Model
+
+- All Azure services authenticate via **Managed Identity** — no connection strings or API keys in source control.
+- The Fabric SQL analytics endpoint authenticates using an **OAuth 2.0 token** (`https://database.windows.net/.default`) obtained via the managed identity — no SQL username or password.
+- `mbr-tools-mcp` is deployed with **ACA internal ingress only** — it is not reachable from the internet, only from other Container Apps in the same environment.
+- `mbr-api` is the only internet-facing service; the MCP server is never called directly by the UI.
+- Blob Storage SAS URLs generated for deck downloads are scoped to **read-only, 1-hour expiry** via user delegation keys.
 
 ---
 

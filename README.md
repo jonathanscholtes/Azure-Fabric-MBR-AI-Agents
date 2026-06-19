@@ -18,8 +18,6 @@ This project demonstrates how to connect **Microsoft Fabric structured data** to
 - [Project Structure](#project-structure)
 - [Deployment](#deployment)
 - [Configuration](#configuration)
-- [Security Model](#security-model)
-- [GitHub Actions](#github-actions)
 - [Clean Up](#clean-up)
 
 ---
@@ -247,54 +245,6 @@ az account set --subscription "YOUR-SUBSCRIPTION-NAME-OR-ID"
 | Foundry connection name | `da_mbr_trucking` |
 | Tables | `dim_month`, `dim_region`, `dim_vehicle_type`, `fact_monthly_kpis`, `fact_vehicle_kpis` |
 | Data range | May 2024 – May 2025 (13 months, 5 regions, 20 vehicle types) |
-
-</details>
-
----
-
-## Security Model
-
-- All Azure services authenticate via **Managed Identity** — no connection strings or API keys in source control.
-- The Fabric SQL analytics endpoint authenticates using an **OAuth 2.0 token** (`https://database.windows.net/.default`) obtained via the managed identity — no SQL username or password.
-- `mbr-tools-mcp` is deployed with **ACA internal ingress only** — it is not reachable from the internet, only from other Container Apps in the same environment.
-- `mbr-api` is the only internet-facing service; the MCP server is never called directly by the UI.
-- Blob Storage SAS URLs generated for deck downloads are scoped to **read-only, 1-hour expiry** via user delegation keys.
-
----
-
-## GitHub Actions
-
-| Files changed | Jobs that run |
-|---|---|
-| `apps/mbr-api/**` | `deploy-api` only |
-| `apps/mbr-ui/**` | `deploy-ui` only |
-| `apps/mbr-tools-mcp/**` | `deploy-mcp` only |
-| `agents/conversational_agent.py` | `deploy-agents` (conversational only) |
-| `agents/mbr_presentation_agent.py` | `deploy-agents` (presentation only) |
-| `agents/deploy.py` / shared | `deploy-agents` (all agents) |
-| `infra/**` | `deploy-infra` |
-
-<details>
-<summary><b>OIDC Setup &amp; Troubleshooting</b></summary>
-
-`-SetupGitHub` creates the Entra app registration and sets three repository secrets automatically. If your organisation's Conditional Access policy blocks the federated identity credential creation and the Actions workflow fails with `AADSTS70025: no configured federated identity credentials`, create it manually:
-
-1. **[portal.azure.com](https://portal.azure.com)** → **Microsoft Entra ID** → **App registrations**
-2. Open the `sp-mbr-github` service principal
-3. **Certificates & secrets** → **Federated credentials** → **Add credential**
-4. Fill in:
-
-   | Field | Value |
-   |---|---|
-   | Scenario | GitHub Actions deploying Azure resources |
-   | Repository | `Azure-Fabric-MBR-AI-Agents` |
-   | Entity type | Branch |
-   | Branch | `main` |
-   | Name | `github-actions-main` |
-
-5. Click **Add**, then re-run the failed workflow.
-
-> Run `deploy.ps1` once locally before pushing to apply the Terraform role assignments that grant the GitHub SP access to Key Vault and Foundry. Without this, the `deploy-agents` job will fail with a 403.
 
 </details>
 
