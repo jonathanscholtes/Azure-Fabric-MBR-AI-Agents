@@ -425,7 +425,7 @@ if ($SetupGitHub) {
         Write-Warn "'gh' CLI not found - skipping GitHub secret setup."
         Write-Host "         Install from https://cli.github.com then re-run with -SetupGitHub" -ForegroundColor Gray
     } else {
-        & "$scripts\New-GitHubOidc.ps1" -Subscription $Subscription -Environment $Environment
+        & "$scripts\New-GitHubOidc.ps1" -Environment $Environment
 
         if ($LASTEXITCODE -eq 0) {
             $githubOidcConfigured = $true
