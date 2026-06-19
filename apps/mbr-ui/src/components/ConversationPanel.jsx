@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import AgentMessageContent from './AgentMessageContent'
 
 function SendIcon() {
   return (
@@ -50,7 +51,14 @@ export default function ConversationPanel({ period, region, messages, isPending,
             <span className="message-role">
               {msg.role === 'user' ? 'You' : 'AI Agent'}
             </span>
-            <span className="message-content">{msg.content}</span>
+            {msg.role === 'user'
+              ? <span className="message-content">{msg.content}</span>
+              : <AgentMessageContent
+                  content={msg.content}
+                  key_drivers={msg.key_drivers}
+                  analytics={msg.analytics}
+                />
+            }
           </div>
         ))}
 

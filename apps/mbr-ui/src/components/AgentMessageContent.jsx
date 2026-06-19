@@ -1,0 +1,88 @@
+import RevenueLineChart from './charts/RevenueLineChart'
+import EfficiencyDonut from './charts/EfficiencyDonut'
+import ServiceBarChart from './charts/ServiceBarChart'
+
+export default function AgentMessageContent({ content, key_drivers, analytics }) {
+  const hasStructured = (key_drivers?.length > 0) || analytics
+
+  if (!hasStructured) {
+    return <span className="message-content">{content}</span>
+  }
+
+  const revenueData = analytics?.revenue_performance?.data?.map(d => ({
+    period: d.month,
+    revenue: d.revenue / 1e6,
+  }))
+
+  const serviceData = analytics?.service_performance?.data?.map(d => ({
+    vehicle_type: d.label,
+    pct: d.value,
+  }))
+
+  const efficiencyValue = analytics?.operational_efficiency?.value
+
+  return (
+    <div className="message-content" style={{ padding: 0, overflow: 'hidden' }}>
+
+      <div style={{ padding: '10px 14px 8px' }}>
+        <p className="analytics-narrative" style={{ margin: 0 }}>{content}</p>
+      </div>
+
+      {key_drivers?.length > 0 && (
+        <div style={{ margin: '0 14px 10px', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+          <div className="key-drivers-heading">Key Drivers</div>
+          {key_drivers.map((d, i) => (
+            <div key={i} className="key-driver-row">
+              <span className="key-driver-label">{d.label}</span>
+              <span className={`key-driver-value ${d.direction}`}>{d.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {analytics && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 14px 12px' }}>
+          {revenueData?.length > 0 && (
+            <div className="analytics-card">
+              <div className="analytics-card-title">Revenue Performance</div>
+              <RevenueLineChart data={revenueData} />
+            </div>
+          )}
+
+          {analytics.cost_management?.narrative && (
+            <div className="analytics-card">
+              <div className="analytics-card-title">Cost Management</div>
+              <p className="analytics-narrative">{analytics.cost_management.narrative}</p>
+            </div>
+          )}
+
+          {efficiencyValue != null && efficiencyValue > 0 && (
+            <div className="analytics-card">
+              <div className="analytics-card-title">Operational Efficiency</div>
+              <div className="analytics-donut-row">
+                <div className="analytics-donut-item">
+                  <EfficiencyDonut value={efficiencyValue} />
+                  <span className="analytics-donut-label">On-Time Rate</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {serviceData?.length > 0 && (
+            <div className="analytics-card">
+              <div className="analytics-card-title">Service Performance</div>
+              <ServiceBarChart data={serviceData} />
+            </div>
+          )}
+
+          {analytics.bottom_line?.narrative && (
+            <div className="analytics-card" style={{ borderColor: 'rgba(34,197,94,.3)' }}>
+              <div className="analytics-card-title" style={{ color: 'var(--accent)' }}>Bottom Line</div>
+              <p className="analytics-narrative">{analytics.bottom_line.narrative}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

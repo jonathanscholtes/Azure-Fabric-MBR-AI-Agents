@@ -119,8 +119,8 @@ function New-TerraformVarsFile {
         Generates infra/terraform.tfvars from terraform.tfvars.tpl on first run.
     .DESCRIPTION
         Substitutes ${SubscriptionId}, ${TenantId}, ${Location}, ${Environment},
-        ${ProjectName}, ${ResourceToken}, ${FabricWorkspaceId}, ${FabricSqlServer},
-        ${GitHubOrg}, ${GitHubRepository} placeholders into the template.
+        ${ProjectName}, ${ResourceToken}, ${FabricWorkspaceId}, ${FabricArtifactId},
+        ${FabricSqlServer}, ${GitHubOrg}, ${GitHubRepository} placeholders into the template.
 
         Reuses the existing resource_token if terraform.tfvars already exists so
         re-runs always target the same Azure resources (and never collide with
@@ -142,6 +142,8 @@ function New-TerraformVarsFile {
         [string]$ProjectName = "mbrtrucking",
 
         [string]$FabricWorkspaceId = "",
+
+        [string]$FabricArtifactId = "",
 
         [string]$FabricSqlServer = "",
 
@@ -175,6 +177,11 @@ function New-TerraformVarsFile {
             $FabricWorkspaceId = $Matches[1]
             Write-Info "Reusing existing fabric_workspace_id: $FabricWorkspaceId"
         }
+        # Preserve fabric_artifact_id if the caller did not supply one.
+        if (-not $FabricArtifactId -and $existing -match 'fabric_artifact_id\s*=\s*"([^"]+)"') {
+            $FabricArtifactId = $Matches[1]
+            Write-Info "Reusing existing fabric_artifact_id: $FabricArtifactId"
+        }
         # Preserve fabric_sql_server if the caller did not supply one.
         if (-not $FabricSqlServer -and $existing -match 'fabric_sql_server\s*=\s*"([^"]+)"') {
             $FabricSqlServer = $Matches[1]
@@ -195,6 +202,7 @@ function New-TerraformVarsFile {
     $content = $content -replace '\$\{ProjectName\}',       $ProjectName
     $content = $content -replace '\$\{ResourceToken\}',     $resourceToken
     $content = $content -replace '\$\{FabricWorkspaceId\}', $FabricWorkspaceId
+    $content = $content -replace '\$\{FabricArtifactId\}',  $FabricArtifactId
     $content = $content -replace '\$\{FabricSqlServer\}',   $FabricSqlServer
     $content = $content -replace '\$\{GitHubOrg\}',         $GitHubOrg
     $content = $content -replace '\$\{GitHubRepository\}',  $GitHubRepository

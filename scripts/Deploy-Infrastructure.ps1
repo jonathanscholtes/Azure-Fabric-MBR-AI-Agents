@@ -24,6 +24,9 @@ param(
     [string]$FabricWorkspaceId = "",
 
     [Parameter(Mandatory=$false)]
+    [string]$FabricArtifactId = "",
+
+    [Parameter(Mandatory=$false)]
     [string]$FabricSqlServer = "",
 
     [Parameter(Mandatory=$false)]
@@ -62,6 +65,7 @@ New-TerraformVarsFile `
     -Environment       $Environment `
     -ProjectName       "mbrtrucking" `
     -FabricWorkspaceId $FabricWorkspaceId `
+    -FabricArtifactId  $FabricArtifactId `
     -FabricSqlServer   $FabricSqlServer `
     -GitHubOrg         $GitHubOrg `
     -GitHubRepository  $GitHubRepository `

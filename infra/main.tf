@@ -82,6 +82,8 @@ module "ai_services" {
   app_insights_connection_string = module.monitoring.app_insights_connection_string
   gpt41_capacity                 = var.gpt41_capacity
   gpt41_mini_capacity            = var.gpt41_mini_capacity
+  fabric_workspace_id            = var.fabric_workspace_id
+  fabric_artifact_id             = var.fabric_artifact_id
 }
 
 module "container_apps" {

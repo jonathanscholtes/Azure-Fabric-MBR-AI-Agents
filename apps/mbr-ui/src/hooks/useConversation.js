@@ -13,7 +13,12 @@ export function useConversation(period, region) {
       setMessages(prev => [...prev, { role: 'user', content: message }]);
     },
     onSuccess: (data) => {
-      setMessages(prev => [...prev, { role: 'assistant', content: data.narrative ?? '' }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.narrative ?? '',
+        key_drivers: data.key_drivers ?? [],
+        analytics: data.analytics ?? null,
+      }]);
     },
   });
 

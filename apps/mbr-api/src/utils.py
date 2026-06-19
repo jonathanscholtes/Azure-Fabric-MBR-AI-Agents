@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 _EMPTY_ANALYTICS = {
     "revenue_performance": {"chart_type": "line", "data": []},
@@ -30,6 +31,10 @@ def parse_agent_json(text: str) -> dict:
         # Remove trailing fence if present
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3].strip()
+
+    # Strip Python-style numeric underscores (e.g. 1_495_192_320 → 1495192320)
+    # The AI agent sometimes emits these, which are invalid JSON.
+    cleaned = re.sub(r'(?<=\d)_(?=\d)', '', cleaned)
 
     try:
         return json.loads(cleaned)

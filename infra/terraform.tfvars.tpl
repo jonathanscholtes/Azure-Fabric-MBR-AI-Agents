@@ -39,6 +39,7 @@ container_app_env_name  = "cae-mbr-${Environment}-${ResourceToken}"
 # Fabric (populated by Deploy-FabricWorkspace.ps1 or supplied manually)
 # ---------------------------------------------------------------------------
 fabric_workspace_id = "${FabricWorkspaceId}"
+fabric_artifact_id  = "${FabricArtifactId}"
 fabric_sql_server   = "${FabricSqlServer}"
 fabric_sql_database = "lh_mbr_trucking"
 

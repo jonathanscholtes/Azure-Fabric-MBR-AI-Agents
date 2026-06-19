@@ -98,6 +98,36 @@ resource "azapi_resource" "ai_project" {
   depends_on = [azapi_resource.gpt41_deployment]
 }
 
+resource "azapi_resource" "fabric_dataagent_connection" {
+  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-09-01"
+  name      = "fabric_dataagent"
+  parent_id = azapi_resource.ai_project.id
+
+  body = {
+    properties = {
+      category      = "CustomKeys"
+      authType      = "CustomKeys"
+      target        = "https://api.fabric.microsoft.com"
+      isSharedToAll = true
+      useWorkspaceManagedIdentity = false
+      credentials = {
+        keys = {
+          WorkspaceId = var.fabric_workspace_id
+          ArtifactId  = var.fabric_artifact_id
+        }
+      }
+      metadata = {
+        WorkspaceId = var.fabric_workspace_id
+        ArtifactId  = var.fabric_artifact_id
+      }
+      peRequirement = "NotRequired"
+      peStatus      = "NotApplicable"
+    }
+  }
+
+  depends_on = [azapi_resource.ai_project]
+}
+
 resource "azapi_resource" "appinsights_connection" {
   type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-09-01"
   name      = "mbr-appinsights"

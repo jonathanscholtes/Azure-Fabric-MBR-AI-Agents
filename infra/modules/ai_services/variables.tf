@@ -55,3 +55,15 @@ variable "app_insights_connection_string" {
   type        = string
   sensitive   = true
 }
+
+variable "fabric_workspace_id" {
+  description = "Microsoft Fabric workspace GUID for the fabric_dataagent project connection"
+  type        = string
+  default     = ""
+}
+
+variable "fabric_artifact_id" {
+  description = "Microsoft Fabric Lakehouse artifact GUID for the fabric_dataagent project connection"
+  type        = string
+  default     = ""
+}

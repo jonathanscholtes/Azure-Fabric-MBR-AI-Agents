@@ -34,7 +34,7 @@ def get_fabric_connection(server: str, database: str) -> pyodbc.Connection:
             f"Encrypt=yes;TrustServerCertificate=no;",
             attrs_before={1256: token_struct},  # SQL_COPT_SS_ACCESS_TOKEN = 1256
         )
-    except pyodbc.InterfaceError as exc:
+    except pyodbc.InterfaceError:
         logger.error(
             "Fabric SQL auth failed (18456) — managed identity (client_id=%s) likely not a "
             "workspace member. Add it as Contributor in the Fabric workspace. server=%s database=%s",

@@ -112,6 +112,12 @@ variable "fabric_workspace_id" {
   default     = ""
 }
 
+variable "fabric_artifact_id" {
+  description = "Microsoft Fabric Lakehouse artifact GUID. Used by the Foundry fabric_dataagent connection."
+  type        = string
+  default     = ""
+}
+
 variable "fabric_sql_server" {
   description = "Fabric Lakehouse SQL analytics endpoint hostname."
   type        = string
