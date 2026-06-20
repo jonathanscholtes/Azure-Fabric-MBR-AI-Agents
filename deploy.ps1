@@ -1,4 +1,4 @@
-﻿# LONGHAUL MBR AI Agents - Main Deployment Orchestrator
+﻿# LONGHAUL Insights AI Agents - Main Deployment Orchestrator
 # Phases:
 #   0. Bootstrap Terraform remote state (skip with -SkipBootstrap after first run)
 #   1. Terraform infrastructure
@@ -23,12 +23,12 @@ param (
     [switch]$Destroy,
 
     # Storage account for Terraform remote state (must be globally unique).
-    # Default: stotfmbr + first 8 hex chars of subscription ID.
+    # Default: stotfins + first 8 hex chars of subscription ID.
     [Parameter(Mandatory = $false)]
     [string]$TfStateStorageAccount = "",
 
     [Parameter(Mandatory = $false)]
-    [string]$TfStateResourceGroup = "rg-tfstate-mbr",
+    [string]$TfStateResourceGroup = "rg-tfstate-ins",
 
     # Skip Phase 0 once the TF backend exists.
     [Parameter(Mandatory = $false)]
@@ -70,7 +70,7 @@ Import-Module "$scripts\common\DeploymentFunctions.psm1" -Force
 Write-Host @"
 
 ============================================================
-  LONGHAUL MBR AI Agents - Deployment Orchestrator
+  LONGHAUL Insights AI Agents - Deployment Orchestrator
 ============================================================
 
 "@ -ForegroundColor Cyan
@@ -88,7 +88,7 @@ $env:ARM_SUBSCRIPTION_ID = $subId
 
 if (-not $TfStateStorageAccount) {
     $suffix                = ($subId -replace '-', '').Substring(0, 8).ToLower()
-    $TfStateStorageAccount = "stotfmbr$suffix"
+    $TfStateStorageAccount = "stotfins$suffix"
 }
 
 Write-Host "  Subscription   : $subId"                -ForegroundColor Gray
@@ -238,7 +238,7 @@ $script:AcrLoginSrv           = if ($tfOutputs) { $tfOutputs.container_registry_
 $script:RgName                = if ($tfOutputs) { $tfOutputs.resource_group_name.value }              else { $null }
 $script:FoundryEp             = if ($tfOutputs) { $tfOutputs.foundry_project_endpoint.value }         else { $null }
 $script:McpFqdn               = if ($tfOutputs) { $tfOutputs.mcp_tools_api_fqdn.value }               else { $null }
-$script:MbrApiUrl             = if ($tfOutputs) { $tfOutputs.mbr_api_url.value }                      else { $null }
+$script:InsightsApiUrl             = if ($tfOutputs) { $tfOutputs.insights_api_url.value }                      else { $null }
 $script:UiUrl                 = if ($tfOutputs) { $tfOutputs.longhaul_ui_url.value }                  else { $null }
 $script:AiAccountId           = if ($tfOutputs) { $tfOutputs.ai_account_id.value }                    else { $null }
 $script:KvName                = if ($tfOutputs) { $tfOutputs.key_vault_name.value }                   else { $null }
@@ -250,7 +250,7 @@ $script:AppIdentityPrincipalId = if ($tfOutputs) { $tfOutputs.app_identity_princ
 $script:LakehouseId            = ""
 $script:DataAgentUrl           = ""
 
-if ($script:MbrApiUrl)   { Write-Host "  mbr-api URL     : $($script:MbrApiUrl)"   -ForegroundColor Gray }
+if ($script:InsightsApiUrl)   { Write-Host "  insights-api URL     : $($script:InsightsApiUrl)"   -ForegroundColor Gray }
 if ($script:UiUrl)       { Write-Host "  UI URL          : $($script:UiUrl)"       -ForegroundColor Gray }
 if ($script:FoundryEp)   { Write-Host "  Foundry project : $($script:FoundryEp)"   -ForegroundColor Gray }
 if ($script:AcrLoginSrv) { Write-Host "  ACR             : $($script:AcrLoginSrv)" -ForegroundColor Gray }
@@ -454,7 +454,7 @@ Write-Host "[OK] Container images built and pushed to ACR"                      
 if (-not $SkipFabric -and $FabricSqlServer) {
     Write-Host "[OK] Fabric Lakehouse tables created$(if (-not $SkipSeed) { ' and seeded' })" -ForegroundColor Green
 }
-Write-Host "[OK] Foundry agents deployed (conversational + mbr-presentation)"                          -ForegroundColor Green
+Write-Host "[OK] Foundry agents deployed (conversational + presentation)"                          -ForegroundColor Green
 
 Write-Host "`n=== Next Steps ===" -ForegroundColor Cyan
 if (-not $FabricSqlServer -and -not $FabricWorkspaceId) {
@@ -463,10 +463,10 @@ if (-not $FabricSqlServer -and -not $FabricWorkspaceId) {
     Write-Host "  OR pass -FabricSqlServer <endpoint> after creating the Lakehouse manually." -ForegroundColor Yellow
 }
 Write-Host "  Fabric portal still required for (cannot be scripted):" -ForegroundColor Cyan
-Write-Host "    1. Create Semantic Model 'sm-mbr-trucking' over the 5 Lakehouse tables" -ForegroundColor Gray
+Write-Host "    1. Create Semantic Model 'sm-trucking-ops' over the 5 Lakehouse tables" -ForegroundColor Gray
 Write-Host "    2. Define DAX measures + mark dim_month as Date Table (period_date column)" -ForegroundColor Gray
-Write-Host "    3. Create Data Agent 'da-mbr-trucking' connected to sm-mbr-trucking" -ForegroundColor Gray
-Write-Host "    4. Connect da-mbr-trucking to AI Foundry (connection name: da-mbr-trucking)" -ForegroundColor Gray
+Write-Host "    3. Create Data Agent 'da-trucking-ops' connected to sm-trucking-ops" -ForegroundColor Gray
+Write-Host "    4. Connect da-trucking-ops to AI Foundry (connection name: da-trucking-ops)" -ForegroundColor Gray
 Write-Host "  See docs/fabric-setup.md for step-by-step instructions." -ForegroundColor Gray
 $saHint = if ($script:StorageAcct) { $script:StorageAcct } else { '<storage-account>' }
 Write-Host "  * Upload MBR template: az storage blob upload --account-name $saHint --container-name templates ..." -ForegroundColor Gray
@@ -484,16 +484,16 @@ if ($githubOidcConfigured) {
 
 Write-Host "`n=== Service Endpoints ===" -ForegroundColor Cyan
 if ($script:UiUrl)     { Write-Host "  LONGHAUL UI  : $($script:UiUrl)"     -ForegroundColor Green }
-if ($script:MbrApiUrl) { Write-Host "  mbr-api      : $($script:MbrApiUrl)" -ForegroundColor Green }
+if ($script:InsightsApiUrl) { Write-Host "  insights-api      : $($script:InsightsApiUrl)" -ForegroundColor Green }
 if ($script:FoundryEp) { Write-Host "  Foundry      : $($script:FoundryEp)" -ForegroundColor Green }
-if (-not $script:UiUrl -and -not $script:MbrApiUrl) {
+if (-not $script:UiUrl -and -not $script:InsightsApiUrl) {
     Write-Host "  Endpoints not yet available - run: terraform -chdir=infra output" -ForegroundColor Yellow
 }
 
 Write-Host @"
 
 ============================================================
-  LONGHAUL MBR AI Agents Deployment Complete!
+  LONGHAUL Insights AI Agents Deployment Complete!
 ============================================================
 
 "@ -ForegroundColor Green

@@ -17,16 +17,16 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install mbr-api deps
+      - name: Install insights-api deps
         run: pip install apps/insights-api/ ruff
 
-      - name: Ruff — mbr-api
+      - name: Ruff — insights-api
         run: ruff check apps/insights-api/src
 
-      - name: Install mbr-tools-mcp deps
+      - name: Install presentation-tools deps
         run: pip install apps/presentation-tools-mcp/
 
-      - name: Ruff — mbr-tools-mcp
+      - name: Ruff — presentation-tools
         run: ruff check apps/presentation-tools-mcp/src
 
       - name: Ruff — agents

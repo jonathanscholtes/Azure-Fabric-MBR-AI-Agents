@@ -153,13 +153,13 @@ Write-Success "Deploy-FabricLakehouse complete."
 Write-Host ""
 Write-Host "=== Next Steps ===" -ForegroundColor Cyan
 Write-Host "  1. (Optional) Create a Semantic Model for DAX measures:" -ForegroundColor Gray
-Write-Host "       - Create Semantic Model 'sm_mbr_trucking' over the 5 Lakehouse tables" -ForegroundColor Gray
+Write-Host "       - Create Semantic Model 'sm_trucking_ops' over the 5 Lakehouse tables" -ForegroundColor Gray
 Write-Host "       - Define DAX measures (see docs/fabric-setup.md)" -ForegroundColor Gray
 Write-Host "       - Mark dim_month as Date Table on period_date column" -ForegroundColor Gray
 Write-Host "  2. Grant Managed Identity Contributor on the Fabric workspace:" -ForegroundColor Gray
 $clientId = terraform -chdir="$root\infra" output -raw app_identity_client_id 2>$null
 if ($clientId) {
     Write-Host "       Client ID: $clientId" -ForegroundColor Gray
-    Write-Host "       Fabric portal -> Workspace 'mbr-trucking' -> Settings -> Manage access -> Add as Contributor" -ForegroundColor Gray
+    Write-Host "       Fabric portal -> Workspace 'trucking-ops' -> Settings -> Manage access -> Add as Contributor" -ForegroundColor Gray
 }
 Write-Host "  3. Run Phase 4: .\scripts\Deploy-FoundryAgents.ps1" -ForegroundColor Gray

@@ -1,4 +1,4 @@
-"""Utility helpers for mbr-api."""
+"""Utility helpers for insights-api."""
 
 from __future__ import annotations
 

@@ -2,31 +2,31 @@
 
 Creates or updates both agents in the Microsoft Foundry project.
 Agent IDs are written to ``agents/agent_ids.json`` so deploy.ps1 /
-GitHub Actions can inject them as environment variables on ca-mbr-api.
+GitHub Actions can inject them as environment variables on ca-insights-api.
 
 MCP URL resolution (in priority order)
 ---------------------------------------
 1. --mcp-server-url        Explicit URL supplied by caller.
 2. Foundry project connection named by --mcp-connection-name
-   (default: "mbr-tools-mcp").  If the connection exists and has an
+   (default: "presentation-tools-mcp").  If the connection exists and has an
    endpoint, use it.
 3. No MCP URL             Presentation agent is created without MCP
-   tools; safe on first deploy — re-run once mbr-tools-mcp is up.
+   tools; safe on first deploy — re-run once presentation-tools-mcp is up.
 
 Fabric Data Agent URL resolution (in priority order)
 -----------------------------------------------------
 1. --fabric-data-agent-url  Explicit URL supplied by caller.
 2. Key Vault secret 'fabric-data-agent-url' (--key-vault-uri).
-3. Foundry connection named by --fabric-connection-name (default: da-mbr-trucking).
+3. Foundry connection named by --fabric-connection-name (default: fabric_dataagent).
 
 Usage:
     python agents/deploy.py \\
         --project-endpoint       <FOUNDRY_PROJECT_ENDPOINT> \\
         --model-deployment       gpt-4.1 \\
-        [--mcp-server-url        https://<mbr-tools-mcp ACA internal FQDN>] \\
-        [--mcp-connection-name   mbr-tools-mcp] \\
+        [--mcp-server-url        https://<presentation-tools-mcp ACA internal FQDN>] \\
+        [--mcp-connection-name   presentation-tools-mcp] \\
         [--fabric-data-agent-url https://api.fabric.microsoft.com/v1/workspaces/.../dataAgents/.../chat/completions] \\
-        [--fabric-connection-name da-mbr-trucking] \\
+        [--fabric-connection-name fabric_dataagent] \\
         [--output agents/agent_ids.json]
 """
 
@@ -59,8 +59,8 @@ logger = logging.getLogger(__name__)
 
 AGENT_MODULES = [conversational_agent, presentation_agent]
 
-DEFAULT_FABRIC_CONNECTION_NAME    = "fabric_dataagent_e6ffd2"
-DEFAULT_MCP_CONNECTION_NAME       = "mbr-tools-mcp"
+DEFAULT_FABRIC_CONNECTION_NAME    = "fabric_dataagent"
+DEFAULT_MCP_CONNECTION_NAME       = "presentation-tools-mcp"
 DEFAULT_MODEL_DEPLOYMENT          = "gpt-4.1"
 DEFAULT_MINI_MODEL_DEPLOYMENT     = "gpt-4.1-mini"
 KV_MCP_SECRET_NAME                = "mcp-server-url"
@@ -177,7 +177,7 @@ class AgentDeployer:
 
         logger.warning(
             "No MCP URL resolved. Presentation agent will be created WITHOUT MCP tools.\n"
-            "  Re-run with --mcp-server-url once mbr-tools-mcp is deployed."
+            "  Re-run with --mcp-server-url once presentation-tools-mcp is deployed."
         )
         return ""
 
@@ -196,7 +196,7 @@ class AgentDeployer:
 
         logger.warning(
             "No Fabric Data Agent URL resolved. Agents will use connection name '%s'.\n"
-            "  Re-run with --fabric-data-agent-url once da_mbr_trucking is deployed.",
+            "  Re-run with --fabric-data-agent-url once da_trucking_ops is deployed.",
             self.fabric_connection_name,
         )
         return ""
@@ -224,7 +224,7 @@ class AgentDeployer:
         """
         kwargs: dict = {
             "server_url":       self.mcp_server_url,
-            "server_label":     "mbr-tools-mcp",
+            "server_label":     "presentation-tools-mcp",
             "require_approval": getattr(module, "REQUIRE_APPROVAL", "never"),
         }
         allowed = getattr(module, "ALLOWED_TOOLS", None)
@@ -305,12 +305,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--key-vault-uri", default=os.environ.get("KEY_VAULT_URI", ""),
                         help="Key Vault URI for MCP URL fallback resolution.")
     parser.add_argument("--mcp-server-url", default=os.environ.get("MCP_SERVER_URL", ""),
-                        help="Direct URL of the mbr-tools-mcp MCP server.")
+                        help="Direct URL of the presentation-tools-mcp MCP server.")
     parser.add_argument("--mcp-connection-name", default=DEFAULT_MCP_CONNECTION_NAME,
                         help=f"Foundry connection name that stores the MCP URL. "
                              f"Default: {DEFAULT_MCP_CONNECTION_NAME}")
     parser.add_argument("--fabric-data-agent-url", default=os.environ.get("FABRIC_DATA_AGENT_URL", ""),
-                        help="Direct chat/completions URL of the Fabric Data Agent (da_mbr_trucking). "
+                        help="Direct chat/completions URL of the Fabric Data Agent (da_trucking_ops). "
                              "Falls back to Key Vault secret 'fabric-data-agent-url', then Foundry connection.")
     parser.add_argument("--fabric-connection-name", default=DEFAULT_FABRIC_CONNECTION_NAME,
                         help=f"Foundry connection name for the Fabric Data Agent. "

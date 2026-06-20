@@ -21,7 +21,7 @@ server {
     }
 
     # API_BASE_URL is injected at container startup via envsubst.
-    # Default (ACA internal DNS): http://ca-mbr-api
+    # Default (ACA internal DNS): http://ca-insights-api
     location /api/ {
         proxy_pass         ${API_BASE_URL}/;
         proxy_http_version 1.1;

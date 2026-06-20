@@ -10,13 +10,13 @@ function triggerDownload(url, filename) {
   document.body.removeChild(a);
 }
 
-export function useMbrGeneration(period, region) {
+export function usePresentationGeneration(period, region) {
   const qc = useQueryClient();
 
   const filename = `MBR-${region ?? 'All'}-${(period ?? '').replace(' ', '')}.pptx`;
 
   const existingDeckQuery = useQuery({
-    queryKey: ['mbr-library', period, region],
+    queryKey: ['presentations-library', period, region],
     queryFn: async () => {
       const data = await api.get('/presentations');
       const items = data?.items ?? [];
@@ -29,7 +29,7 @@ export function useMbrGeneration(period, region) {
   const generateMutation = useMutation({
     mutationFn: () => api.post('/presentations', { period, region }),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['mbr-library'] });
+      qc.invalidateQueries({ queryKey: ['presentations-library'] });
       if (data?.deck_url) {
         triggerDownload(data.deck_url, filename);
       }

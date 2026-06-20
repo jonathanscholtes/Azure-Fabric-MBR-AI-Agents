@@ -50,11 +50,11 @@ function DeckCard({ deck }) {
   );
 }
 
-export default function MbrLibrary() {
+export default function PresentationsLibrary() {
   const [search, setSearch] = useState('');
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['mbr-library'],
+    queryKey: ['presentations-library'],
     queryFn: () => api.get('/presentations'),
     staleTime: 2 * 60 * 1000,
   });

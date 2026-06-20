@@ -1,5 +1,5 @@
 /* =========================================================
-   LONGHAUL MBR AI Platform — Design System
+   LONGHAUL Insights Platform — Design System
    ========================================================= */
 :root {
   --bg:           #0b1120;
@@ -231,7 +231,7 @@ button { font-family: inherit; }
   filter: brightness(0) invert(1);
 }
 
-.sidebar-new-mbr-btn {
+.sidebar-new-report-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,8 +251,8 @@ button { font-family: inherit; }
   transition: opacity .15s;
   white-space: nowrap;
 }
-.sidebar-new-mbr-btn:hover { opacity: .86; }
-.sidebar-new-mbr-btn svg { flex-shrink: 0; }
+.sidebar-new-report-btn:hover { opacity: .86; }
+.sidebar-new-report-btn svg { flex-shrink: 0; }
 
 .sidebar-nav {
   flex: 1;
@@ -404,9 +404,9 @@ button { font-family: inherit; }
 .sidebar-user-role { font-size: 10px; color: var(--muted); margin-top: 1px; }
 
 /* =========================================================
-   MBR Header (trucking photo strip)
+   Report Header (trucking photo strip)
    ========================================================= */
-.mbr-header {
+.report-header {
   position: relative;
   height: var(--header-h);
   background: var(--panel);
@@ -414,7 +414,7 @@ button { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.mbr-header-photo {
+.report-header-photo {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -424,7 +424,7 @@ button { font-family: inherit; }
   opacity: .28;
 }
 
-.mbr-header-overlay {
+.report-header-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg,
@@ -433,7 +433,7 @@ button { font-family: inherit; }
     rgba(11,17,32,.42) 100%);
 }
 
-.mbr-header-content {
+.report-header-content {
   position: relative;
   z-index: 1;
   height: 100%;
@@ -442,9 +442,9 @@ button { font-family: inherit; }
   padding: 0 24px;
 }
 
-.mbr-header-title-block { display: flex; flex-direction: column; }
+.report-header-title-block { display: flex; flex-direction: column; }
 
-.mbr-header-label {
+.report-header-label {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: .16em;
@@ -453,7 +453,7 @@ button { font-family: inherit; }
   margin-bottom: 3px;
 }
 
-.mbr-header-title {
+.report-header-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
@@ -461,7 +461,7 @@ button { font-family: inherit; }
   letter-spacing: -.02em;
 }
 
-.mbr-header-subtitle {
+.report-header-subtitle {
   font-size: 11.5px;
   color: var(--muted-2);
   margin-top: 4px;

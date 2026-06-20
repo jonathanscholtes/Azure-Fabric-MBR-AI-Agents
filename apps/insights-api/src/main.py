@@ -1,4 +1,4 @@
-"""FastAPI entry point for mbr-api."""
+"""FastAPI entry point for insights-api."""
 
 from __future__ import annotations
 

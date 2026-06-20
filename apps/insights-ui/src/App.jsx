@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/layout/Sidebar.jsx'
 import TopBar from './components/layout/TopBar.jsx'
 import Dashboard from './pages/Dashboard.jsx'
-import MbrLibrary from './pages/MbrLibrary.jsx'
+import PresentationsLibrary from './pages/PresentationsLibrary.jsx'
 
 function ComingSoon({ title }) {
   return (
@@ -28,7 +28,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard period={period} region={region} />} />
-          <Route path="/presentations" element={<MbrLibrary />} />
+          <Route path="/presentations" element={<PresentationsLibrary />} />
           <Route path="/settings"     element={<ComingSoon title="Settings" />} />
           <Route path="/reports"      element={<ComingSoon title="Data & Reports" />} />
           <Route path="/alerts"       element={<ComingSoon title="Alerts" />} />

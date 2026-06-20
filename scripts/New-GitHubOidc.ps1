@@ -16,7 +16,7 @@
 .EXAMPLE
     .\scripts\New-GitHubOidc.ps1
     .\scripts\New-GitHubOidc.ps1 -Environment staging
-    .\scripts\New-GitHubOidc.ps1 -Repo myorg/Azure-Fabric-MBR-AI-Agents -Environment prod
+    .\scripts\New-GitHubOidc.ps1 -Repo myorg/Fabric-Foundry-Insight-Presentation-Agents -Environment prod
 #>
 
 param (

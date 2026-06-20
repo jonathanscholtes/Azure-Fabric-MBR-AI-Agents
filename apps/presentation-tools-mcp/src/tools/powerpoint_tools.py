@@ -336,7 +336,7 @@ def register_powerpoint_tools(mcp) -> None:
             # Slide 8 — Data Sources & Methodology
             {
                 "mbr_period":        period,
-                "data_source_1":     "Fabric Lakehouse — lh_mbr_trucking",
+                "data_source_1":     "Fabric Lakehouse — lh_trucking_ops",
                 "data_source_2":     "Azure AI Foundry Agent",
                 "data_source_3":     "LONGHAUL MBR Platform",
                 "data_source_4":     "",

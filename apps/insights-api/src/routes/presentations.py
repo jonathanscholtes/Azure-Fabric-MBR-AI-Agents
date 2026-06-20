@@ -70,7 +70,7 @@ async def generate_presentation(
     body: PresentationRequest, request: Request
 ) -> PresentationResponse:
     """
-    Trigger the MBR Presentation Agent to generate a completed PowerPoint deck.
+    Trigger the Presentation Agent to generate a completed PowerPoint deck.
     Persists deck metadata to Storage and returns the response to the browser.
     """
     client = _get_foundry_client(request)
@@ -86,11 +86,11 @@ async def generate_presentation(
             timeout=240.0,
         )
     except asyncio.TimeoutError as exc:
-        raise HTTPException(status_code=504, detail="MBR Presentation Agent timed out") from exc
+        raise HTTPException(status_code=504, detail="Presentation Agent timed out") from exc
     except Exception as exc:
-        logger.exception("MBR Presentation Agent error: %s", exc)
+        logger.exception("Presentation Agent error: %s", exc)
         raise HTTPException(
-            status_code=502, detail=f"MBR Presentation Agent error: {exc}"
+            status_code=502, detail=f"Presentation Agent error: {exc}"
         ) from exc
 
     # Extract deck_id and thumbnail_urls from the agent result

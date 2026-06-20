@@ -4,13 +4,13 @@
 
 .DESCRIPTION
     Uses the Fabric REST API to:
-      1. Create Lakehouse 'lh_mbr_trucking' in the specified workspace (idempotent).
+      1. Create Lakehouse 'lh_trucking_ops' in the specified workspace (idempotent).
       2. Poll the long-running operation until provisioning completes.
       3. Poll GET Lakehouse until sqlEndpointProperties.provisioningStatus = "Success".
       4. Return the SQL analytics endpoint hostname.
       5. Optionally update infra/terraform.tfvars with fabric_sql_server.
 
-    The Semantic Model ('sm-mbr-trucking') and Data Agent ('da-mbr-trucking') still
+    The Semantic Model ('sm-trucking-ops') and Data Agent ('da-trucking-ops') still
     require manual Fabric portal steps  -  see docs/fabric-setup.md.
 
     Auth: uses the current 'az login' session.  The signed-in principal must have
@@ -20,7 +20,7 @@
     Fabric workspace GUID.
 
 .PARAMETER LakehouseName
-    Lakehouse display name.  Default: lh_mbr_trucking
+    Lakehouse display name.  Default: lh_trucking_ops
 
 .PARAMETER UpdateTfvars
     When set, writes the resolved SQL server hostname into infra/terraform.tfvars.
@@ -38,7 +38,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $WorkspaceId,
 
-    [string] $LakehouseName = "lh_mbr_trucking",
+    [string] $LakehouseName = "lh_trucking_ops",
 
     [switch] $UpdateTfvars
 )
@@ -119,7 +119,7 @@ if ($existing) {
     # ---------------------------------------------------------------------------
     Write-Info "Creating Lakehouse '$LakehouseName'..."
 
-    $body = @{ displayName = $LakehouseName; description = "LONGHAUL MBR trucking data" } | ConvertTo-Json -Compress
+    $body = @{ displayName = $LakehouseName; description = "LONGHAUL trucking operations data" } | ConvertTo-Json -Compress
 
     try {
         $createResp = Invoke-WebRequest `
@@ -229,10 +229,10 @@ Write-Host "  Lakehouse ID  : $lakehouseId"  -ForegroundColor Gray
 Write-Host "  SQL Server    : $sqlServer"     -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps (manual  -  Fabric portal):" -ForegroundColor Cyan
-Write-Host "  1. Create Semantic Model 'sm-mbr-trucking' over the 5 Lakehouse tables" -ForegroundColor Gray
+Write-Host "  1. Create Semantic Model 'sm-trucking-ops' over the 5 Lakehouse tables" -ForegroundColor Gray
 Write-Host "  2. Define DAX measures + mark dim_month as Date Table (period_date column)" -ForegroundColor Gray
-Write-Host "  3. Create Data Agent 'da-mbr-trucking' connected to sm-mbr-trucking" -ForegroundColor Gray
-Write-Host "  4. Connect da-mbr-trucking to AI Foundry (connection name: da-mbr-trucking)" -ForegroundColor Gray
+Write-Host "  3. Create Data Agent 'da-trucking-ops' connected to sm-trucking-ops" -ForegroundColor Gray
+Write-Host "  4. Connect da-trucking-ops to AI Foundry (connection name: da-trucking-ops)" -ForegroundColor Gray
 Write-Host "  See: docs/fabric-setup.md" -ForegroundColor Gray
 Write-Host ""
 

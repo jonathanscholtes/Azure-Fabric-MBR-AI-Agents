@@ -1,4 +1,4 @@
-"""Azure Blob Storage helpers for mbr-api."""
+"""Azure Blob Storage helpers for insights-api."""
 
 from __future__ import annotations
 

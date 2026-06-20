@@ -34,73 +34,73 @@ variable "resource_token" {
 
 # ---------------------------------------------------------------------------
 # Resource names (explicit — set via terraform.tfvars.tpl)
-# Naming convention: <caf-abbr>-mbr-<env>-<token>
+# Naming convention: <caf-abbr>-ins-<env>-<token>
 # ---------------------------------------------------------------------------
 
 variable "resource_group_name" {
   description = "Resource group name."
   type        = string
-  default     = "rg-mbr-dev"
+  default     = "rg-ins-dev"
 }
 
 variable "app_identity_name" {
   description = "App managed identity name (used by Container Apps at runtime)."
   type        = string
-  default     = "id-mbr-dev-app"
+  default     = "id-ins-dev-app"
 }
 
 variable "deploy_identity_name" {
   description = "Deploy managed identity name (used by GitHub Actions CI/CD)."
   type        = string
-  default     = "id-mbr-dev-deploy"
+  default     = "id-ins-dev-deploy"
 }
 
 variable "key_vault_name" {
   description = "Key Vault name (3-24 chars, globally unique)."
   type        = string
-  default     = "kv-mbr-dev"
+  default     = "kv-ins-dev"
 }
 
 variable "app_insights_name" {
   description = "Application Insights name."
   type        = string
-  default     = "appi-mbr-dev"
+  default     = "appi-ins-dev"
 }
 
 variable "log_analytics_workspace_name" {
   description = "Log Analytics workspace name."
   type        = string
-  default     = "log-mbr-dev"
+  default     = "log-ins-dev"
 }
 
 variable "ai_services_name" {
   description = "AI Services account name (globally unique, used as Foundry account)."
   type        = string
-  default     = "ais-mbr-dev"
+  default     = "ais-ins-dev"
 }
 
 variable "ai_project_name" {
   description = "AI Foundry project name."
   type        = string
-  default     = "proj-mbr-dev"
+  default     = "proj-ins-dev"
 }
 
 variable "container_registry_name" {
   description = "Container Registry name (alphanumeric only, 5-50 chars, globally unique)."
   type        = string
-  default     = "crmbr"
+  default     = "crins"
 }
 
 variable "storage_account_name" {
   description = "Storage account name (alphanumeric lowercase only, 3-24 chars, globally unique)."
   type        = string
-  default     = "sambrdev"
+  default     = "sainsdev"
 }
 
 variable "container_app_env_name" {
   description = "Container App Environment name."
   type        = string
-  default     = "cae-mbr-dev"
+  default     = "cae-ins-dev"
 }
 
 # ---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ variable "fabric_workspace_id" {
 }
 
 variable "fabric_artifact_id" {
-  description = "Microsoft Fabric Lakehouse artifact GUID. Used by the Foundry fabric_dataagent connection."
+  description = "Microsoft Fabric Data Agent artifact GUID (the dataAgents/aiskills GUID, NOT the Lakehouse). Used by the Foundry fabric_dataagent connection."
   type        = string
   default     = ""
 }
@@ -127,7 +127,7 @@ variable "fabric_sql_server" {
 variable "fabric_sql_database" {
   description = "Fabric Lakehouse SQL database name."
   type        = string
-  default     = "lh-mbr-trucking"
+  default     = "lh_trucking_ops"
 }
 
 # ---------------------------------------------------------------------------

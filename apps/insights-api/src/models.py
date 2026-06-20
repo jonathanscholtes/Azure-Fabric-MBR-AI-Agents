@@ -1,4 +1,4 @@
-"""Pydantic v2 request/response models for mbr-api."""
+"""Pydantic v2 request/response models for insights-api."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Fabric SQL endpoint
     FABRIC_SQL_SERVER: str = ""
-    FABRIC_SQL_DATABASE: str = "lh_mbr_trucking"
+    FABRIC_SQL_DATABASE: str = "lh_trucking_ops"
 
     # Azure Storage
     STORAGE_ACCOUNT_URL: str = ""

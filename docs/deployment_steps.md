@@ -57,14 +57,14 @@ Fabric resources cannot be created via Terraform and require a one-time manual s
 ### 1a. Create the Workspace
 
 1. Go to [app.fabric.microsoft.com](https://app.fabric.microsoft.com)
-2. Click **+ New workspace** and name it — e.g. `longhaul-mbr`
+2. Click **+ New workspace** and name it — e.g. `longhaul-trucking-ops`
 3. Note the **Workspace ID** from the URL:
    `https://app.fabric.microsoft.com/groups/<workspace-id>/...`
 
 ### 1b. Create the Lakehouse
 
 1. Inside the workspace, click **New item → Lakehouse**
-2. Name it: `lh_mbr_trucking`
+2. Name it: `lh_trucking_ops`
 3. Once created, open the Lakehouse and note the **Lakehouse ID** from the URL
 4. Navigate to **Lakehouse settings → SQL analytics endpoint**
 5. Copy the **Server** hostname — it looks like:
@@ -77,8 +77,8 @@ Fabric resources cannot be created via Terraform and require a one-time manual s
 ## Step 2 — Clone the Repository
 
 ```bash
-git clone https://github.com/jonathanscholtes/Azure-Fabric-MBR-AI-Agents.git
-cd Azure-Fabric-MBR-AI-Agents
+git clone https://github.com/jonathanscholtes/Fabric-Foundry-Insight-Presentation-Agents.git
+cd Fabric-Foundry-Insight-Presentation-Agents
 ```
 
 ---
@@ -108,10 +108,10 @@ The deployment runs six phases automatically:
 |---|---|---|
 | 0 — Bootstrap | *(inline)* | Creates Terraform remote state backend (Storage Account + container) |
 | 1 — Infrastructure | `Deploy-Infrastructure.ps1` | Provisions all Azure resources via Terraform |
-| 2 — Containers | `Deploy-Containers.ps1` | Builds and pushes `mbr-api`, `mbr-tools-mcp`, and `mbr-ui` images to ACR |
+| 2 — Containers | `Deploy-Containers.ps1` | Builds and pushes `insights-api`, `presentation-tools`, and `insights-ui` images to ACR |
 | 3 — Fabric Lakehouse | `Deploy-FabricLakehouse.ps1` | Creates tables, seeds 13 months of KPI data, uploads `mbr_template.pptx` |
-| 3b — Fabric Data Agent | `Deploy-FabricDataAgent.ps1` | Creates `da_mbr_trucking`, assigns managed identity Contributor access to the workspace |
-| 4 — Foundry Agents | `Deploy-FoundryAgents.ps1` | Deploys `conversational-agent` and `mbr-presentation-agent`, injects agent IDs as Container App environment variables |
+| 3b — Fabric Data Agent | `Deploy-FabricDataAgent.ps1` | Creates `da_trucking_ops`, assigns managed identity Contributor access to the workspace |
+| 4 — Foundry Agents | `Deploy-FoundryAgents.ps1` | Deploys `conversational-agent` and `presentation-agent`, injects agent IDs as Container App environment variables |
 
 **Optional parameters:**
 
@@ -135,8 +135,8 @@ The deployment runs six phases automatically:
 
 | Resource | Purpose |
 |---|---|
-| Microsoft Foundry account + project | Hosts `conversational-agent` and `mbr-presentation-agent`; GPT-4.1 and GPT-4.1-mini deployments |
-| Container Apps environment | Hosts `mbr-api`, `mbr-tools-mcp`, and `mbr-ui` |
+| Microsoft Foundry account + project | Hosts `conversational-agent` and `presentation-agent`; GPT-4.1 and GPT-4.1-mini deployments |
+| Container Apps environment | Hosts `insights-api`, `presentation-tools`, and `insights-ui` |
 | Azure Container Registry | Stores container images |
 | Azure Key Vault | Stores runtime secrets (MCP server URL, Fabric Data Agent URL) |
 | User-Assigned Managed Identity | Runtime identity for Container Apps — no stored credentials |
@@ -147,7 +147,7 @@ The deployment runs six phases automatically:
 
 ## Step 5 — Configure the Fabric Data Agent (Manual — Portal)
 
-The `Deploy-FabricDataAgent.ps1` script creates the `da_mbr_trucking` agent via the Fabric REST API. However, the Fabric API does not reliably apply data sources or agent instructions — these two steps must be completed in the portal.
+The `Deploy-FabricDataAgent.ps1` script creates the `da_trucking_ops` agent via the Fabric REST API. However, the Fabric API does not reliably apply data sources or agent instructions — these two steps must be completed in the portal.
 
 ### Fabric Admin Prerequisite
 
@@ -163,11 +163,11 @@ Without this setting, the `Deploy-FabricDataAgent.ps1` RBAC call returns 403 and
 ### 5a. Add the Lakehouse as a Data Source
 
 1. Go to [app.fabric.microsoft.com](https://app.fabric.microsoft.com) and open your workspace
-2. Open **`da_mbr_trucking`**
+2. Open **`da_trucking_ops`**
 3. Click **Add data** → **Lakehouse**
-4. Select **`lh_mbr_trucking`** from the workspace list
+4. Select **`lh_trucking_ops`** from the workspace list
 5. Confirm — the Lakehouse should appear in the **Data** tab
-6. Open the `lh_mbr_trucking` data source and fill in the two fields below
+6. Open the `lh_trucking_ops` data source and fill in the two fields below
 
 **Data source description:**
 ```
@@ -202,7 +202,7 @@ Always join fact tables to dimension tables:
 2. Paste the following system prompt:
 
 ```
-You are da_mbr_trucking, the data agent for LONGHAUL, a long-haul trucking company.
+You are da_trucking_ops, the data agent for LONGHAUL, a long-haul trucking company.
 You have access to 13 months of operational KPI data (May 2024 to May 2025) across
 5 regions (North, South, East, West, Central) and 4 vehicle types
 (Flatbed, Refrigerated, Dry Van, Tanker).
@@ -215,7 +215,7 @@ Always join to dimension tables to return human-readable labels:
 - JOIN dim_vehicle_type ON vehicle_type_id (fact_vehicle_kpis only)
 
 ## Value formats
-- period_label format: 'May 2025' (full month name, space, 4-digit year)
+- period_label format: 3-letter month abbreviation + space + 4-digit year — e.g. 'Mar 2025', 'Sep 2024'. Never use the full month name ('March 2025' returns no data).
 - region_name values: 'North', 'South', 'East', 'West', 'Central'
 - For all-region queries, omit the region filter
 
@@ -340,7 +340,7 @@ If the automated RBAC assignment failed (403 from the deploy script), add the ma
 
 1. In the workspace, go to **Settings → Manage access**
 2. Click **Add people or groups**
-3. Search for `longhaul-app-identity` (the user-assigned managed identity)
+3. Search for `id-ins-dev-app` (the user-assigned managed identity)
 4. Set role to **Contributor**
 5. Save
 
@@ -358,19 +358,19 @@ Key outputs:
 
 | Output | Description |
 |---|---|
-| `container_app_ui_url` | MBR UI — open in a browser to verify |
-| `container_app_api_url` | API gateway — open `<url>/docs` to verify FastAPI is running |
-| `ai_project_endpoint` | Foundry project endpoint |
-| `storage_account_url` | Blob Storage base URL |
+| `longhaul_ui_url` | Insights UI — open in a browser to verify |
+| `insights_api_url` | API gateway — open `<url>/docs` to verify FastAPI is running |
+| `foundry_project_endpoint` | Foundry project endpoint |
+| `storage_account_name` | Blob Storage account name |
 
 **Deployment Validation Checklist:**
 
 - [ ] `terraform apply` completes with exit 0
 - [ ] Lakehouse tables created and seeded (`fact_monthly_kpis`, `fact_vehicle_kpis`, `dim_month`, `dim_region`, `dim_vehicle_type`)
 - [ ] `mbr_template.pptx` uploaded to the `templates` blob container
-- [ ] `da_mbr_trucking` visible in the Fabric workspace with `lh_mbr_trucking` as a data source, instructions set, and example queries added
-- [ ] Foundry agents `conversational-agent` and `mbr-presentation-agent` visible in the Foundry portal
-- [ ] Agent IDs injected as environment variables on `ca-mbr-api` Container App (`CONVERSATIONAL_AGENT_NAME`, `MBR_PRESENTATION_AGENT_NAME`)
+- [ ] `da_trucking_ops` visible in the Fabric workspace with `lh_trucking_ops` as a data source, instructions set, and example queries added
+- [ ] Foundry agents `conversational-agent` and `presentation-agent` visible in the Foundry portal
+- [ ] Agent IDs injected as environment variables on `ca-insights-api` Container App (`CONVERSATIONAL_AGENT_NAME`, `PRESENTATION_AGENT_NAME`)
 - [ ] KPI bar loads on the Dashboard with data for the default period/region
 - [ ] Conversational agent responds to questions in the Chat panel
 - [ ] Clicking **Generate Presentation** triggers a `.pptx` download
@@ -381,8 +381,8 @@ Key outputs:
 
 - All Azure services authenticate via **Managed Identity** — no connection strings or API keys in source control.
 - The Fabric SQL analytics endpoint authenticates using an **OAuth 2.0 token** (`https://database.windows.net/.default`) obtained via the managed identity — no SQL username or password.
-- `mbr-tools-mcp` is deployed with **ACA internal ingress only** — it is not reachable from the internet, only from other Container Apps in the same environment.
-- `mbr-api` is the only internet-facing service; the MCP server is never called directly by the UI.
+- `presentation-tools` is deployed with **ACA internal ingress only** — it is not reachable from the internet, only from other Container Apps in the same environment.
+- `insights-api` is the only internet-facing service; the MCP server is never called directly by the UI.
 - Blob Storage SAS URLs generated for deck downloads are scoped to **read-only, 1-hour expiry** via user delegation keys.
 
 ---
@@ -393,11 +393,11 @@ CI/CD is pre-configured in `.github/workflows/`. Each workflow uses path filters
 
 | Files changed | Job that runs |
 |---|---|
-| `apps/mbr-api/**` | `deploy-api` |
-| `apps/mbr-ui/**` | `deploy-ui` |
-| `apps/mbr-tools-mcp/**` | `deploy-mcp` |
+| `apps/insights-api/**` | `deploy-api` |
+| `apps/insights-ui/**` | `deploy-ui` |
+| `apps/presentation-tools-mcp/**` | `deploy-mcp` |
 | `agents/conversational_agent.py` | `deploy-agents` (conversational only) |
-| `agents/mbr_presentation_agent.py` | `deploy-agents` (presentation only) |
+| `agents/presentation_agent.py` | `deploy-agents` (presentation only) |
 | `agents/deploy.py` / shared | `deploy-agents` (all agents) |
 | `infra/**` | `deploy-infra` |
 
@@ -418,14 +418,14 @@ Set these automatically by running deploy with the `-SetupGitHub` flag (requires
 **If OIDC credential creation is blocked by Conditional Access** (`AADSTS70025: no configured federated identity credentials`), create the federated credential manually:
 
 1. **[portal.azure.com](https://portal.azure.com)** → **Microsoft Entra ID** → **App registrations**
-2. Open **`sp-mbr-github`**
+2. Open **`longhaul-github-actions`**
 3. **Certificates & secrets** → **Federated credentials** → **Add credential**
 4. Fill in:
 
    | Field | Value |
    |---|---|
    | Scenario | GitHub Actions deploying Azure resources |
-   | Repository | `Azure-Fabric-MBR-AI-Agents` |
+   | Repository | `Fabric-Foundry-Insight-Presentation-Agents` |
    | Entity type | Branch |
    | Branch | `main` |
    | Name | `github-actions-main` |
@@ -444,6 +444,6 @@ After testing or when no longer needed, tear down all deployed Azure resources:
 .\deploy.ps1 -Subscription "YOUR-SUBSCRIPTION-NAME-OR-ID" -Destroy
 ```
 
-This runs `terraform destroy` on all resources. The Terraform state storage account (`rg-tfstate-mbr`) is **not** destroyed and must be removed manually if no longer needed.
+This runs `terraform destroy` on all resources. The Terraform state storage account (`rg-tfstate-ins`) is **not** destroyed and must be removed manually if no longer needed.
 
 The Fabric workspace and Lakehouse are not managed by Terraform and must be deleted separately from the [Fabric portal](https://app.fabric.microsoft.com).

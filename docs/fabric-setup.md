@@ -6,14 +6,14 @@ created via Terraform — they require manual setup through the Fabric portal.
 ## 1. Create the Workspace
 
 1. Go to [app.fabric.microsoft.com](https://app.fabric.microsoft.com)
-2. Create (or open) a workspace — e.g. **longhaul-mbr**
+2. Create (or open) a workspace — e.g. **longhaul-trucking-ops**
 3. Note the **Workspace ID** from the URL:
    `https://app.fabric.microsoft.com/groups/<workspace-id>/...`
 
 ## 2. Create the Lakehouse
 
 1. In the workspace, click **New → Lakehouse**
-2. Name it: `lh-mbr-trucking`
+2. Name it: `lh_trucking_ops`
 3. Once created, open the Lakehouse and note the **Lakehouse ID** from the URL
 4. Go to **Lakehouse settings → SQL analytics endpoint**
 5. Copy the **Server** hostname — it looks like:
@@ -39,8 +39,8 @@ Both scripts use `DefaultAzureCredential` — ensure you are logged in via
 ## 4. Create the Semantic Model
 
 1. In the workspace, click **New → Semantic model**
-2. Name it: `sm-mbr-trucking`
-3. Connect it to the `lh-mbr-trucking` Lakehouse
+2. Name it: `sm_trucking_ops`
+3. Connect it to the `lh_trucking_ops` Lakehouse
 4. Import these tables: `dim_month`, `dim_region`, `dim_vehicle_type`,
    `fact_monthly_kpis`, `fact_vehicle_kpis`
 5. Define relationships:
@@ -113,7 +113,7 @@ Driver Retention % =
 ### 5a. Create the agent (automated)
 
 Running `deploy.ps1 -FabricWorkspaceId <guid>` calls `Deploy-FabricDataAgent.ps1`,
-which creates `da_mbr_trucking` via the Fabric REST API.  The creation step
+which creates `da_trucking_ops` via the Fabric REST API.  The creation step
 (name + description) works reliably.  The `updateDefinition` step that follows
 attempts to set the data source and instructions via API but **may not apply** —
 the portal will show "No data added" if it fails.
@@ -123,12 +123,12 @@ the portal will show "No data added" if it fails.
 The Fabric portal is the only reliable way to wire up the Lakehouse:
 
 1. Go to [app.fabric.microsoft.com](https://app.fabric.microsoft.com) and open
-   the **longhaul-mbr** workspace
-2. Open **da_mbr_trucking**
+   the **longhaul-trucking-ops** workspace
+2. Open **da_trucking_ops**
 3. Click **Add data** → **Lakehouse**
-4. Select **lh_mbr_trucking** from the workspace
+4. Select **lh_trucking_ops** from the workspace
 5. Confirm — the Lakehouse should appear in the **Data** tab
-6. Open the `lh_mbr_trucking` data source and fill in the two fields below
+6. Open the `lh_trucking_ops` data source and fill in the two fields below
 
 **Data source description:**
 ```
@@ -146,7 +146,7 @@ Always join fact tables to dimension tables:
 - JOIN dim_vehicle_type ON vehicle_type_id (fact_vehicle_kpis only)
 
 ## Value formats
-- period_label: 'May 2025' (full month name, space, 4-digit year)
+- period_label: 3-letter month abbreviation + space + 4-digit year — e.g. 'Mar 2025', 'Sep 2024'. Never use the full month name ('March 2025' returns no data).
 - region_name: 'North', 'South', 'East', 'West', 'Central'
 - For all-region queries, omit the region filter
 
@@ -163,7 +163,7 @@ Always join fact tables to dimension tables:
 2. Paste the following system prompt:
 
 ```
-You are da_mbr_trucking, the data agent for LONGHAUL, a long-haul trucking company.
+You are da_trucking_ops, the data agent for LONGHAUL, a long-haul trucking company.
 You have access to 13 months of operational KPI data (May 2024 to May 2025) across
 5 regions (North, South, East, West, Central) and 4 vehicle types
 (Flatbed, Refrigerated, Dry Van, Tanker).
@@ -295,17 +295,19 @@ WHERE m.period_label = 'Mar 2025'
 
 Click **Publish** in the top toolbar. The agent is not active until published.
 
-### 5f. Fabric connection name
+### 5f. Foundry connection name
 
-After publishing, the connection name used by Microsoft Foundry is `da_mbr_trucking`.
-This must match the value in `agents/deploy.py`:
+The Foundry connection to this Data Agent is created by Terraform with the name `fabric_dataagent`
+(it points at this workspace + Data Agent via the `fabric_workspace_id` / `fabric_artifact_id` variables).
+The Fabric Data Agent itself is named `da_trucking_ops`, but the **connection** Foundry uses is `fabric_dataagent`.
+This connection name must match `DEFAULT_FABRIC_CONNECTION_NAME` in `agents/deploy.py`:
 ```python
-FABRIC_CONNECTION_NAME = "da_mbr_trucking"
+DEFAULT_FABRIC_CONNECTION_NAME = "fabric_dataagent"
 ```
 
 ## 6. Managed Identity Access
 
-The app's managed identity (`longhaul-app-identity`) needs **Contributor** access
+The app's managed identity (`id-ins-dev-app`) needs **Contributor** access
 to the Fabric workspace so it can query the Lakehouse SQL analytics endpoint.
 
 ### Automated (recommended)
@@ -327,7 +329,7 @@ prints a warning. Re-run the deploy after enabling it, or add the identity manua
 
 1. Go to the workspace **Settings → Manage access**
 2. Click **Add people or groups**
-3. Search for `longhaul-app-identity` (the user-assigned managed identity)
+3. Search for `id-ins-dev-app` (the user-assigned managed identity)
 4. Set role to **Contributor**
 5. Save
 

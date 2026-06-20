@@ -23,15 +23,15 @@ export default function Dashboard({ period, region }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
 
-      {/* ── MBR Executive Summary header with trucking photo ── */}
-      <div className="mbr-header">
-        <img src="/trucking_photo.png" alt="" className="mbr-header-photo" />
-        <div className="mbr-header-overlay" />
-        <div className="mbr-header-content">
-          <div className="mbr-header-title-block">
-            <span className="mbr-header-label">LONGHAUL INSIGHTS</span>
-            <span className="mbr-header-title">Executive Summary</span>
-            <span className="mbr-header-subtitle">
+      {/* ── Executive Summary header with trucking photo ── */}
+      <div className="report-header">
+        <img src="/trucking_photo.png" alt="" className="report-header-photo" />
+        <div className="report-header-overlay" />
+        <div className="report-header-content">
+          <div className="report-header-title-block">
+            <span className="report-header-label">LONGHAUL INSIGHTS</span>
+            <span className="report-header-title">Executive Summary</span>
+            <span className="report-header-subtitle">
               {periodDateRange(period)} &nbsp;&middot;&nbsp; {region} Region
             </span>
           </div>

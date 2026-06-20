@@ -130,7 +130,7 @@ resource "azapi_resource" "fabric_dataagent_connection" {
 
 resource "azapi_resource" "appinsights_connection" {
   type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-09-01"
-  name      = "mbr-appinsights"
+  name      = "insights-appinsights"
   parent_id = azapi_resource.ai_project.id
 
   body = {

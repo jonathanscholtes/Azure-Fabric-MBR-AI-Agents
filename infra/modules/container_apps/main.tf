@@ -12,9 +12,9 @@ resource "azurerm_container_app_environment" "main" {
   tags                = var.tags
 }
 
-# ── mbr-api (external ingress, port 8000) ────────────────────────────────────
-resource "azurerm_container_app" "mbr_api" {
-  name                         = "ca-mbr-api"
+# ── insights-api (external ingress, port 8000) ────────────────────────────────────
+resource "azurerm_container_app" "insights_api" {
+  name                         = "ca-insights-api"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
@@ -48,7 +48,7 @@ resource "azurerm_container_app" "mbr_api" {
     max_replicas = 3
 
     container {
-      name   = "mbr-api"
+      name   = "insights-api"
       image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
       cpu    = 0.5
       memory = "1Gi"
@@ -81,9 +81,9 @@ resource "azurerm_container_app" "mbr_api" {
   }
 }
 
-# ── mbr-tools-mcp (external ingress, port 80) ───────────────────────────────
-resource "azurerm_container_app" "mbr_tools_api" {
-  name                         = "ca-mbr-tools-mcp"
+# ── presentation-tools (external ingress, port 80) ───────────────────────────────
+resource "azurerm_container_app" "presentation_tools" {
+  name                         = "ca-presentation-tools"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
@@ -117,7 +117,7 @@ resource "azurerm_container_app" "mbr_tools_api" {
     max_replicas = 2
 
     container {
-      name   = "mbr-tools-mcp"
+      name   = "presentation-tools"
       image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
       cpu    = 1.0
       memory = "2Gi"
@@ -138,9 +138,9 @@ resource "azurerm_container_app" "mbr_tools_api" {
   }
 }
 
-# ── mbr-ui (external ingress, port 80) ───────────────────────────────────
+# ── insights-ui (external ingress, port 80) ───────────────────────────────────
 resource "azurerm_container_app" "longhaul_ui" {
-  name                         = "ca-mbr-ui"
+  name                         = "ca-insights-ui"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
@@ -174,7 +174,7 @@ resource "azurerm_container_app" "longhaul_ui" {
     max_replicas = 2
 
     container {
-      name   = "mbr-ui"
+      name   = "insights-ui"
       image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
       cpu    = 0.25
       memory = "0.5Gi"

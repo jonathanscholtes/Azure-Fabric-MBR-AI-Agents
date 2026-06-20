@@ -1,4 +1,4 @@
-import { useMbrGeneration } from '../hooks/useMbrGeneration'
+import { usePresentationGeneration } from '../hooks/usePresentationGeneration'
 
 function IconDownload() {
   return (
@@ -33,7 +33,7 @@ const SLIDE_TITLES = [
 ]
 
 export default function PresentationPanel({ period, region }) {
-  const { existingDeckQuery, generateMutation, downloadAgainMutation, activeDeckId } = useMbrGeneration(period, region)
+  const { existingDeckQuery, generateMutation, downloadAgainMutation, activeDeckId } = usePresentationGeneration(period, region)
   const {
     mutate: generate,
     isPending: generating,
