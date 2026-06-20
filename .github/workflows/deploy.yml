@@ -31,11 +31,11 @@ jobs:
         with:
           filters: |
             mbr_api:
-              - 'apps/mbr-api/**'
+              - 'apps/insights-api/**'
             mbr_tools_mcp:
-              - 'apps/mbr-tools-mcp/**'
+              - 'apps/presentation-tools-mcp/**'
             mbr_ui:
-              - 'apps/mbr-ui/**'
+              - 'apps/insights-ui/**'
             agents:
               - 'agents/**'
             infra:
@@ -169,7 +169,7 @@ jobs:
             --registry $(echo "${{ needs.read-infra.outputs.acr }}" | cut -d. -f1) \
             --image    mbr-api:${{ github.sha }} \
             --image    mbr-api:latest \
-            apps/mbr-api
+            apps/insights-api
 
       - name: Update mbr-api Container App
         run: |
@@ -200,7 +200,7 @@ jobs:
             --registry $(echo "${{ needs.read-infra.outputs.acr }}" | cut -d. -f1) \
             --image    mbr-tools-mcp:${{ github.sha }} \
             --image    mbr-tools-mcp:latest \
-            apps/mbr-tools-mcp
+            apps/presentation-tools-mcp
 
       - name: Update mbr-tools-mcp Container App
         run: |
@@ -232,7 +232,7 @@ jobs:
             --image     mbr-ui:${{ github.sha }} \
             --image     mbr-ui:latest \
             --build-arg VITE_API_BASE_URL=/api \
-            apps/mbr-ui
+            apps/insights-ui
 
       - name: Update mbr-ui Container App
         run: |
@@ -281,7 +281,7 @@ jobs:
           az containerapp update \
             --name ca-mbr-api \
             --resource-group ${{ needs.read-infra.outputs.resource_group }} \
-            --set-env-vars "CONVERSATIONAL_AGENT_NAME=$CONV_NAME" "MBR_PRESENTATION_AGENT_NAME=$PRES_NAME" \
+            --set-env-vars "CONVERSATIONAL_AGENT_NAME=$CONV_NAME" "PRESENTATION_AGENT_NAME=$PRES_NAME" \
             --output none
 
   # ── Smoke test ────────────────────────────────────────────────────────────

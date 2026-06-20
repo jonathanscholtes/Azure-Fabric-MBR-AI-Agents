@@ -161,7 +161,7 @@ if (-not (Test-Path $agentIdsFile)) {
 $ids = Get-Content $agentIdsFile -Raw | ConvertFrom-Json
 
 $convId = $ids.'longhaul-conversational-agent'
-$presId = $ids.'longhaul-mbr-presentation-agent'
+$presId = $ids.'longhaul-presentation-agent'
 
 if (-not $convId -or -not $presId) {
     Write-Warn "Could not read agent IDs from agent_ids.json - skipping env-var update."
@@ -185,7 +185,7 @@ if ($script:RgName) {
     az containerapp update `
         --name           "ca-mbr-api" `
         --resource-group $script:RgName `
-        --set-env-vars   "CONVERSATIONAL_AGENT_NAME=$convId" "MBR_PRESENTATION_AGENT_NAME=$presId" `
+        --set-env-vars   "CONVERSATIONAL_AGENT_NAME=$convId" "PRESENTATION_AGENT_NAME=$presId" `
         --output         none
     if ($LASTEXITCODE -ne 0) { throw "az containerapp update failed (exit $LASTEXITCODE)" }
     Write-Success "Agent names injected into ca-mbr-api."
@@ -193,5 +193,5 @@ if ($script:RgName) {
     Write-Warn "resource_group_name not available - skipping Container App update."
     Write-Info "Set manually:"
     Write-Info "  CONVERSATIONAL_AGENT_NAME = $convId"
-    Write-Info "  MBR_PRESENTATION_AGENT_NAME = $presId"
+    Write-Info "  PRESENTATION_AGENT_NAME = $presId"
 }

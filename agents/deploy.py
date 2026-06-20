@@ -52,12 +52,12 @@ from azure.ai.projects.models import (
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
-from agents import conversational_agent, mbr_presentation_agent
+from agents import conversational_agent, presentation_agent
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-AGENT_MODULES = [conversational_agent, mbr_presentation_agent]
+AGENT_MODULES = [conversational_agent, presentation_agent]
 
 DEFAULT_FABRIC_CONNECTION_NAME    = "fabric_dataagent_e6ffd2"
 DEFAULT_MCP_CONNECTION_NAME       = "mbr-tools-mcp"

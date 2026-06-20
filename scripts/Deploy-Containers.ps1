@@ -105,7 +105,7 @@ function Invoke-AcrBuild {
 Write-Title "Building mbr-api"
 Invoke-AcrBuild -RegistryName $registryName `
                 -Image        "mbr-api:latest" `
-                -ContextPath  "$root\apps\mbr-api"
+                -ContextPath  "$root\apps\insights-api"
 Write-Success "mbr-api built and pushed"
 
 # ---------------------------------------------------------------------------
@@ -114,7 +114,7 @@ Write-Success "mbr-api built and pushed"
 Write-Title "Building mbr-tools-mcp"
 Invoke-AcrBuild -RegistryName $registryName `
                 -Image        "mbr-tools-mcp:latest" `
-                -ContextPath  "$root\apps\mbr-tools-mcp"
+                -ContextPath  "$root\apps\presentation-tools-mcp"
 Write-Success "mbr-tools-mcp built and pushed"
 
 # ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ Write-Success "mbr-tools-mcp built and pushed"
 Write-Title "Building mbr-ui"
 Invoke-AcrBuild -RegistryName $registryName `
                 -Image        "mbr-ui:latest" `
-                -ContextPath  "$root\apps\mbr-ui" `
+                -ContextPath  "$root\apps\insights-ui" `
                 -BuildArgs    @("VITE_API_BASE_URL=/api")
 Write-Success "mbr-ui built and pushed"
 
