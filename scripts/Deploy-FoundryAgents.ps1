@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Deploy or update LONGHAUL Foundry agents and inject their IDs into ca-mbr-api.
+    Deploy or update LONGHAUL Foundry agents and inject their IDs into ca-insights-api.
 
 .DESCRIPTION
     Resolves the Foundry project endpoint and MCP server URL from Terraform outputs
     (or explicit params), creates/updates both agents via agents/deploy.py, then
     writes agent IDs to agents/agent_ids.json and injects them as environment
-    variables on the ca-mbr-api Container App.
+    variables on the ca-insights-api Container App.
 
     MCP URL resolution (in priority order):
       1. -McpServerUrl param / MCP_SERVER_URL env var
@@ -19,7 +19,7 @@
     then to the foundry_project_endpoint Terraform output.
 
 .PARAMETER McpServerUrl
-    Direct URL of the mbr-tools-mcp MCP server.  Falls back to MCP_SERVER_URL env var,
+    Direct URL of the presentation-tools-mcp MCP server.  Falls back to MCP_SERVER_URL env var,
     then to https://<mcp_tools_api_fqdn> from Terraform outputs.
 
 .PARAMETER ModelDeployment
@@ -31,14 +31,14 @@
 
 .PARAMETER McpConnectionName
     Foundry project connection name that stores the MCP server URL.
-    Default: mbr-tools-mcp
+    Default: presentation-tools-mcp
 
 .PARAMETER FabricDataAgentUrl
-    Direct chat/completions URL of the Fabric Data Agent (da_mbr_trucking).
+    Direct chat/completions URL of the Fabric Data Agent (da_trucking_ops).
     Falls back to Key Vault secret 'fabric-data-agent-url', then Foundry connection fallback.
 
 .PARAMETER FabricConnectionName
-    Foundry connection name for the Fabric Data Agent. Default: da-mbr-trucking
+    Foundry connection name for the Fabric Data Agent. Default: fabric_dataagent
 
 .PARAMETER KeyVaultUri
     Key Vault URI for MCP URL and Fabric Data Agent URL fallback lookup.
@@ -46,7 +46,7 @@
 
 .EXAMPLE
     .\scripts\Deploy-FoundryAgents.ps1
-    .\scripts\Deploy-FoundryAgents.ps1 -McpServerUrl https://ca-mbr-tools-mcp.internal.example.com
+    .\scripts\Deploy-FoundryAgents.ps1 -McpServerUrl https://ca-presentation-tools.internal.example.com
 #>
 [CmdletBinding()]
 param(
@@ -54,9 +54,9 @@ param(
     [string] $McpServerUrl         = $env:MCP_SERVER_URL,
     [string] $ModelDeployment      = "gpt-4.1",
     [string] $MiniModelDeployment  = "gpt-4.1-mini",
-    [string] $McpConnectionName    = "mbr-tools-mcp",
+    [string] $McpConnectionName    = "presentation-tools-mcp",
     [string] $FabricDataAgentUrl   = $env:FABRIC_DATA_AGENT_URL,
-    [string] $FabricConnectionName = "fabric_dataagent_e6ffd2",
+    [string] $FabricConnectionName = "fabric_dataagent",
     [string] $KeyVaultUri          = $env:KEY_VAULT_URI
 )
 
@@ -151,7 +151,7 @@ if ($LASTEXITCODE -ne 0) { throw "agents/deploy.py failed (exit $LASTEXITCODE)" 
 Write-Success "Agents deployed. IDs written to agents/agent_ids.json"
 
 # ---------------------------------------------------------------------------
-# Inject agent IDs into ca-mbr-api Container App
+# Inject agent IDs into ca-insights-api Container App
 # ---------------------------------------------------------------------------
 if (-not (Test-Path $agentIdsFile)) {
     Write-Warn "agent_ids.json not found - skipping Container App env-var update."
@@ -161,7 +161,7 @@ if (-not (Test-Path $agentIdsFile)) {
 $ids = Get-Content $agentIdsFile -Raw | ConvertFrom-Json
 
 $convId = $ids.'longhaul-conversational-agent'
-$presId = $ids.'longhaul-mbr-presentation-agent'
+$presId = $ids.'longhaul-presentation-agent'
 
 if (-not $convId -or -not $presId) {
     Write-Warn "Could not read agent IDs from agent_ids.json - skipping env-var update."
@@ -169,7 +169,7 @@ if (-not $convId -or -not $presId) {
 }
 
 Write-Info "Conversational Agent ID   : $convId"
-Write-Info "MBR Presentation Agent ID : $presId"
+Write-Info "Presentation Agent ID : $presId"
 
 if (-not $script:RgName) {
     Push-Location $infraDir
@@ -181,17 +181,17 @@ if (-not $script:RgName) {
 }
 
 if ($script:RgName) {
-    Write-Info "Injecting agent names into ca-mbr-api (RG: $($script:RgName))..."
+    Write-Info "Injecting agent names into ca-insights-api (RG: $($script:RgName))..."
     az containerapp update `
-        --name           "ca-mbr-api" `
+        --name           "ca-insights-api" `
         --resource-group $script:RgName `
-        --set-env-vars   "CONVERSATIONAL_AGENT_NAME=$convId" "MBR_PRESENTATION_AGENT_NAME=$presId" `
+        --set-env-vars   "CONVERSATIONAL_AGENT_NAME=$convId" "PRESENTATION_AGENT_NAME=$presId" `
         --output         none
     if ($LASTEXITCODE -ne 0) { throw "az containerapp update failed (exit $LASTEXITCODE)" }
-    Write-Success "Agent names injected into ca-mbr-api."
+    Write-Success "Agent names injected into ca-insights-api."
 } else {
     Write-Warn "resource_group_name not available - skipping Container App update."
     Write-Info "Set manually:"
     Write-Info "  CONVERSATIONAL_AGENT_NAME = $convId"
-    Write-Info "  MBR_PRESENTATION_AGENT_NAME = $presId"
+    Write-Info "  PRESENTATION_AGENT_NAME = $presId"
 }

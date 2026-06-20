@@ -3,19 +3,19 @@ output "resource_group_name" {
   value       = azurerm_resource_group.main.name
 }
 
-output "mbr_api_url" {
-  description = "Public URL of the mbr-api Container App"
-  value       = "https://${module.container_apps.mbr_api_fqdn}"
+output "insights_api_url" {
+  description = "Public URL of the insights-api Container App"
+  value       = "https://${module.container_apps.insights_api_fqdn}"
 }
 
 output "longhaul_ui_url" {
-  description = "Public URL of the mbr-ui Container App"
+  description = "Public URL of the insights-ui Container App"
   value       = "https://${module.container_apps.longhaul_ui_fqdn}"
 }
 
 output "mcp_tools_api_fqdn" {
-  description = "Internal FQDN of the mbr-tools-mcp Container App (ACA internal ingress — agents only)"
-  value       = module.container_apps.mbr_tools_api_fqdn
+  description = "Internal FQDN of the presentation-tools Container App (ACA internal ingress — agents only)"
+  value       = module.container_apps.presentation_tools_fqdn
 }
 
 output "storage_account_name" {

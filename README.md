@@ -58,7 +58,7 @@ The **Conversational Agent** maintains multi-turn threads, allowing users to exp
 
 ### Pattern 3 — MCP-driven presentation generation
 
-The **Presentation Agent** orchestrates a two-step workflow: retrieve KPIs from the Fabric Data Agent, then invoke an MCP tool (`fill_mbr_template`) that fills a PowerPoint template with `python-pptx`, uploads the completed deck to Azure Blob Storage, and returns a download URL. The agent drives the entire flow; the MCP tool enforces template consistency — every generated deck follows the same structure.
+The **Presentation Agent** orchestrates a two-step workflow: retrieve KPIs from the Fabric Data Agent, then invoke an MCP tool (`fill_presentation_template`) that fills a PowerPoint template with `python-pptx`, uploads the completed deck to Azure Blob Storage, and returns a download URL. The agent drives the entire flow; the MCP tool enforces template consistency — every generated deck follows the same structure.
 
 ### Adapt this to your domain
 
@@ -78,20 +78,20 @@ To adapt: replace the Fabric Lakehouse tables with your domain data, update the 
 ```mermaid
 flowchart TD
     KV["🔐 Azure Key Vault\nAgent IDs · Secrets"]
-    FABRIC["📊 Microsoft Fabric\nlh_mbr_trucking Lakehouse\nda_mbr_trucking Data Agent"]
+    FABRIC["📊 Microsoft Fabric\nlh_trucking_ops Lakehouse\nda_trucking_ops Data Agent"]
 
     subgraph FOUNDRY["Microsoft Foundry"]
         Models["🤖 Models\n· GPT-4.1\n· GPT-4.1-mini"]
         subgraph AGENTS["Agents"]
             CONV["💬 conversational-agent\nMulti-turn Q&A on fleet KPIs"]
-            PRES["📑 mbr-presentation-agent\nGenerates completed MBR deck"]
+            PRES["📑 presentation-agent\nGenerates completed MBR deck"]
         end
     end
 
     subgraph CONTAINER_APPS["Azure Container Apps"]
-        API["⚙️ mbr-api\nFastAPI · REST gateway (external)"]
-        MCP["🔧 mbr-tools-mcp\nFastMCP · PowerPoint tools (internal)"]
-        UI["🖥️ mbr-ui\nReact + Vite · Dashboard + Chat"]
+        API["⚙️ insights-api\nFastAPI · REST gateway (external)"]
+        MCP["🔧 presentation-tools\nFastMCP · PowerPoint tools (internal)"]
+        UI["🖥️ insights-ui\nReact + Vite · Dashboard + Chat"]
     end
 
     STORAGE["🗄️ Azure Blob Storage\ntemplates · decks · thumbnails\nconversations · decks-metadata"]
@@ -111,12 +111,12 @@ flowchart TD
 | Component | Technology | Role |
 |---|---|---|
 | **conversational-agent** | Microsoft Foundry Agent | Multi-turn Q&A against Fabric KPI data |
-| **mbr-presentation-agent** | Microsoft Foundry Agent | Orchestrates KPI retrieval and deck generation |
-| **da_mbr_trucking** | Fabric Data Agent | Natural-language interface to the Lakehouse |
-| **lh_mbr_trucking** | Microsoft Fabric Lakehouse | 13 months of trucking operational KPI data |
-| **mbr-api** | FastAPI, Python | REST gateway — routes UI requests to agents and Storage |
-| **mbr-tools-mcp** | FastMCP, Python | MCP server — PowerPoint template filling, deck management |
-| **mbr-ui** | React, Vite | Dashboard, KPI bar, conversational chat, MBR library |
+| **presentation-agent** | Microsoft Foundry Agent | Orchestrates KPI retrieval and deck generation |
+| **da_trucking_ops** | Fabric Data Agent | Natural-language interface to the Lakehouse |
+| **lh_trucking_ops** | Microsoft Fabric Lakehouse | 13 months of trucking operational KPI data |
+| **insights-api** | FastAPI, Python | REST gateway — routes UI requests to agents and Storage |
+| **presentation-tools** | FastMCP, Python | MCP server — PowerPoint template filling, deck management |
+| **insights-ui** | React, Vite | Dashboard, KPI bar, conversational chat, MBR library |
 
 ---
 
@@ -126,17 +126,17 @@ flowchart TD
 <summary>Expand to view repository layout</summary>
 
 ```
-Azure-Fabric-MBR-AI-Agents/
+Fabric-Foundry-Insight-Presentation-Agents/
 ├── deploy.ps1                          # Full end-to-end deployment orchestrator
 ├── README.md                           # This file
 │
 ├── agents/                             # Foundry agent definitions + deployer
 │   ├── deploy.py                       # Creates / updates both agents, writes IDs to agents/agent_ids.json
 │   ├── conversational_agent.py         # Conversational agent definition
-│   └── mbr_presentation_agent.py      # MBR presentation agent definition
+│   └── presentation_agent.py      # MBR presentation agent definition
 │
 ├── apps/
-│   ├── mbr-api/                        # FastAPI REST gateway (external ACA)
+│   ├── insights-api/                        # FastAPI REST gateway (external ACA)
 │   │   └── src/
 │   │       ├── main.py                 # App entry point, router registration
 │   │       ├── config.py              # Environment / settings
@@ -144,19 +144,17 @@ Azure-Fabric-MBR-AI-Agents/
 │   │       ├── models.py              # Pydantic request/response models
 │   │       └── routes/                # kpis, analytics, presentations, templates, conversations
 │   │
-│   ├── mbr-tools-mcp/                  # FastMCP server (internal ACA — agents only)
+│   ├── presentation-tools/                  # FastMCP server (internal ACA — agents only)
 │   │   └── src/
 │   │       └── tools/
-│   │           └── powerpoint_tools.py # fill_mbr_template, get_mbr_deck_url, get_template_slides
+│   │           └── powerpoint_tools.py # fill_presentation_template, get_deck_url, get_template_slides
 │   │
-│   └── mbr-ui/                         # React + Vite SPA
+│   └── insights-ui/                         # React + Vite SPA
 │       └── src/
 │           ├── App.jsx                 # Period/region state, routing
 │           ├── components/             # KpiSummaryBar, PresentationPanel, AnalyticsPanel, ConversationPanel
-│           ├── hooks/                  # useKpis, useAnalytics, useMbrGeneration, useConversation
-│           └── pages/                  # Dashboard, MbrLibrary, Conversations
-│
-├── agents/                             # Foundry agent definitions
+│           ├── hooks/                  # useKpis, useAnalytics, usePresentationGeneration, useConversation
+│           └── pages/                  # Dashboard, PresentationsLibrary, Conversations
 │
 ├── infra/                              # Infrastructure as Code (Terraform)
 │   ├── main.tf                         # Root module
@@ -165,7 +163,7 @@ Azure-Fabric-MBR-AI-Agents/
 │   ├── terraform.tfvars.tpl            # Template — filled by deploy.ps1
 │   └── modules/
 │       ├── ai_services/                # Foundry account + project + GPT-4.1 deployments
-│       ├── container_apps/             # mbr-api, mbr-tools-mcp, mbr-ui Container Apps
+│       ├── container_apps/             # insights-api, presentation-tools, insights-ui Container Apps
 │       ├── container_registry/         # Azure Container Registry
 │       ├── identity/                   # User-assigned managed identity + RBAC
 │       ├── key_vault/                  # Key Vault + secrets
@@ -177,7 +175,7 @@ Azure-Fabric-MBR-AI-Agents/
 │   ├── Deploy-Containers.ps1           # Phase 2: ACR image build & push
 │   ├── Deploy-FabricWorkspace.ps1      # Phase 3: Create Lakehouse, discover SQL endpoint
 │   ├── Deploy-FabricLakehouse.ps1      # Phase 3: Create tables, seed data, upload template
-│   ├── Deploy-FabricDataAgent.ps1      # Phase 3b: Create da_mbr_trucking + workspace RBAC
+│   ├── Deploy-FabricDataAgent.ps1      # Phase 3b: Create da_trucking_ops + workspace RBAC
 │   ├── Deploy-FoundryAgents.ps1        # Phase 4: Deploy Foundry agents
 │   ├── New-GitHubOidc.ps1             # GitHub Actions OIDC setup
 │   └── common/
@@ -218,31 +216,31 @@ az account set --subscription "YOUR-SUBSCRIPTION-NAME-OR-ID"
 <details>
 <summary>Expand to view environment variable reference</summary>
 
-### mbr-api
+### insights-api
 
 | Variable | Source | Description |
 |---|---|---|
 | `AZURE_CLIENT_ID` | Managed Identity | Client ID of the user-assigned managed identity |
 | `FOUNDRY_PROJECT_ENDPOINT` | Terraform output | Foundry project endpoint URL |
-| `CONVERSATIONAL_AGENT_ID` | Key Vault secret | Agent ID written by `Deploy-FoundryAgents.ps1` |
-| `MBR_PRESENTATION_AGENT_ID` | Key Vault secret | Agent ID written by `Deploy-FoundryAgents.ps1` |
+| `CONVERSATIONAL_AGENT_NAME` | Container App env var | Agent name set on `ca-insights-api` by `Deploy-FoundryAgents.ps1` |
+| `PRESENTATION_AGENT_NAME` | Container App env var | Agent name set on `ca-insights-api` by `Deploy-FoundryAgents.ps1` |
 | `FABRIC_SQL_SERVER` | Terraform variable | Fabric SQL analytics endpoint hostname |
-| `FABRIC_SQL_DATABASE` | Terraform variable | `lh_mbr_trucking` |
+| `FABRIC_SQL_DATABASE` | Terraform variable | `lh_trucking_ops` |
 | `STORAGE_ACCOUNT_URL` | Terraform output | `https://<account>.blob.core.windows.net` |
 
-### mbr-tools-mcp
+### presentation-tools
 
 | Variable | Source | Description |
 |---|---|---|
 | `AZURE_CLIENT_ID` | Managed Identity | Client ID of the user-assigned managed identity |
 | `STORAGE_ACCOUNT_URL` | Terraform output | `https://<account>.blob.core.windows.net` |
 
-### Fabric Data Agent (`da_mbr_trucking`)
+### Fabric Data Agent (`da_trucking_ops`)
 
 | Setting | Value |
 |---|---|
-| Data source | `lh_mbr_trucking` Lakehouse |
-| Foundry connection name | `da_mbr_trucking` |
+| Data source | `lh_trucking_ops` Lakehouse |
+| Foundry connection name | `da_trucking_ops` |
 | Tables | `dim_month`, `dim_region`, `dim_vehicle_type`, `fact_monthly_kpis`, `fact_vehicle_kpis` |
 | Data range | May 2024 – May 2025 (13 months, 5 regions, 20 vehicle types) |
 
@@ -258,7 +256,7 @@ After testing or when no longer needed, tear down all deployed resources:
 .\deploy.ps1 -Subscription "YOUR-SUBSCRIPTION-NAME-OR-ID" -Destroy
 ```
 
-This runs `terraform destroy` on all LONGHAUL MBR resources. The Terraform state storage account (`rg-tfstate-mbr`) is **not** destroyed and must be removed manually if no longer needed.
+This runs `terraform destroy` on all LONGHAUL Insight resources. The Terraform state storage account (`rg-tfstate-ins`) is **not** destroyed and must be removed manually if no longer needed.
 
 The Fabric workspace and Lakehouse are not managed by Terraform and must be deleted separately from the [Fabric portal](https://app.fabric.microsoft.com).
 

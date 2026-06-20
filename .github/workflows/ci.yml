@@ -17,17 +17,17 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install mbr-api deps
-        run: pip install apps/mbr-api/ ruff
+      - name: Install insights-api deps
+        run: pip install apps/insights-api/ ruff
 
-      - name: Ruff — mbr-api
-        run: ruff check apps/mbr-api/src
+      - name: Ruff — insights-api
+        run: ruff check apps/insights-api/src
 
-      - name: Install mbr-tools-mcp deps
-        run: pip install apps/mbr-tools-mcp/
+      - name: Install presentation-tools deps
+        run: pip install apps/presentation-tools-mcp/
 
-      - name: Ruff — mbr-tools-mcp
-        run: ruff check apps/mbr-tools-mcp/src
+      - name: Ruff — presentation-tools
+        run: ruff check apps/presentation-tools-mcp/src
 
       - name: Ruff — agents
         run: ruff check agents
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/mbr-ui
+        working-directory: apps/insights-ui
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +45,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: apps/mbr-ui/package-lock.json
+          cache-dependency-path: apps/insights-ui/package-lock.json
 
       - run: npm ci
       - run: npm run lint

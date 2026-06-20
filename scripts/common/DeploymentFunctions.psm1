@@ -1,4 +1,4 @@
-# Common deployment functions for LONGHAUL MBR AI Agents
+# Common deployment functions for LONGHAUL Insights AI Agents
 
 function Write-Title {
     param([string]$Title)
@@ -139,7 +139,7 @@ function New-TerraformVarsFile {
         [Parameter(Mandatory=$true)]
         [string]$Environment,
 
-        [string]$ProjectName = "mbrtrucking",
+        [string]$ProjectName = "insights",
 
         [string]$FabricWorkspaceId = "",
 

@@ -25,9 +25,9 @@ terraform {
   }
 
   backend "azurerm" {
-    resource_group_name = "rg-tfstate-mbrtrucking"
+    resource_group_name = "rg-tfstate-ins"
     container_name      = "tfstate"
-    key                 = "mbrtrucking.tfstate"
+    key                 = "insights.tfstate"
     use_azuread_auth    = true
     # storage_account_name supplied via -backend-config at init time
   }

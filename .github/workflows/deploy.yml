@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  TF_STATE_RG: rg-tfstate-mbr
+  TF_STATE_RG: rg-tfstate-ins
 
 permissions:
   id-token: write
@@ -19,9 +19,9 @@ jobs:
     permissions:
       contents: read
     outputs:
-      mbr_api:       ${{ steps.filter.outputs.mbr_api }}
-      mbr_tools_mcp: ${{ steps.filter.outputs.mbr_tools_mcp }}
-      mbr_ui:        ${{ steps.filter.outputs.mbr_ui }}
+      insights_api:       ${{ steps.filter.outputs.insights_api }}
+      presentation_tools_mcp: ${{ steps.filter.outputs.presentation_tools_mcp }}
+      insights_ui:        ${{ steps.filter.outputs.insights_ui }}
       agents:        ${{ steps.filter.outputs.agents }}
       infra:         ${{ steps.filter.outputs.infra }}
     steps:
@@ -30,12 +30,12 @@ jobs:
         id: filter
         with:
           filters: |
-            mbr_api:
-              - 'apps/mbr-api/**'
-            mbr_tools_mcp:
-              - 'apps/mbr-tools-mcp/**'
-            mbr_ui:
-              - 'apps/mbr-ui/**'
+            insights_api:
+              - 'apps/insights-api/**'
+            presentation_tools_mcp:
+              - 'apps/presentation-tools-mcp/**'
+            insights_ui:
+              - 'apps/insights-ui/**'
             agents:
               - 'agents/**'
             infra:
@@ -69,7 +69,7 @@ jobs:
         run: |
           SUB_ID=$(az account show --query id -o tsv)
           SUFFIX=${SUB_ID//-/}
-          echo "TF_STATE_STORAGE=stotfmbr${SUFFIX:0:8}" >> $GITHUB_ENV
+          echo "TF_STATE_STORAGE=stotfins${SUFFIX:0:8}" >> $GITHUB_ENV
 
       - name: Terraform init
         run: |
@@ -77,7 +77,7 @@ jobs:
             -backend-config="resource_group_name=${{ env.TF_STATE_RG }}" \
             -backend-config="storage_account_name=${{ env.TF_STATE_STORAGE }}" \
             -backend-config="container_name=tfstate" \
-            -backend-config="key=mbr-trucking.tfstate"
+            -backend-config="key=insights.tfstate"
 
       - name: Terraform apply
         run: |
@@ -104,7 +104,7 @@ jobs:
       resource_group:        ${{ steps.tfout.outputs.resource_group }}
       foundry_endpoint:      ${{ steps.tfout.outputs.foundry_endpoint }}
       mcp_fqdn:              ${{ steps.tfout.outputs.mcp_fqdn }}
-      mbr_api_url:           ${{ steps.tfout.outputs.mbr_api_url }}
+      insights_api_url:           ${{ steps.tfout.outputs.insights_api_url }}
       model_deployment:      ${{ steps.tfout.outputs.model_deployment }}
       mini_model_deployment: ${{ steps.tfout.outputs.mini_model_deployment }}
       key_vault_uri:         ${{ steps.tfout.outputs.key_vault_uri }}
@@ -126,7 +126,7 @@ jobs:
         run: |
           SUB_ID=$(az account show --query id -o tsv)
           SUFFIX=${SUB_ID//-/}
-          echo "TF_STATE_STORAGE=stotfmbr${SUFFIX:0:8}" >> $GITHUB_ENV
+          echo "TF_STATE_STORAGE=stotfins${SUFFIX:0:8}" >> $GITHUB_ENV
 
       - name: Terraform init (read-only)
         run: |
@@ -134,7 +134,7 @@ jobs:
             -backend-config="resource_group_name=${{ env.TF_STATE_RG }}" \
             -backend-config="storage_account_name=${{ env.TF_STATE_STORAGE }}" \
             -backend-config="container_name=tfstate" \
-            -backend-config="key=mbr-trucking.tfstate"
+            -backend-config="key=insights.tfstate"
 
       - name: Read Terraform outputs
         id: tfout
@@ -143,17 +143,17 @@ jobs:
           echo "resource_group=$(terraform -chdir=infra output -raw resource_group_name)"        >> $GITHUB_OUTPUT
           echo "foundry_endpoint=$(terraform -chdir=infra output -raw foundry_project_endpoint)" >> $GITHUB_OUTPUT
           echo "mcp_fqdn=$(terraform -chdir=infra output -raw mcp_tools_api_fqdn)"              >> $GITHUB_OUTPUT
-          echo "mbr_api_url=$(terraform -chdir=infra output -raw mbr_api_url)"                  >> $GITHUB_OUTPUT
+          echo "insights_api_url=$(terraform -chdir=infra output -raw insights_api_url)"                  >> $GITHUB_OUTPUT
           echo "model_deployment=$(terraform -chdir=infra output -raw model_deployment)"         >> $GITHUB_OUTPUT
           echo "mini_model_deployment=$(terraform -chdir=infra output -raw mini_model_deployment)" >> $GITHUB_OUTPUT
           echo "key_vault_uri=$(terraform -chdir=infra output -raw key_vault_uri)"               >> $GITHUB_OUTPUT
 
-  # ── Build & deploy mbr-api ────────────────────────────────────────────────
-  build-mbr-api:
-    name: Build mbr-api
+  # ── Build & deploy insights-api ────────────────────────────────────────────────
+  build-insights-api:
+    name: Build insights-api
     runs-on: ubuntu-latest
     needs: [changes, read-infra]
-    if: needs.changes.outputs.mbr_api == 'true'
+    if: needs.changes.outputs.insights_api == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -163,28 +163,28 @@ jobs:
           tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build & push mbr-api
+      - name: Build & push insights-api
         run: |
           az acr build \
             --registry $(echo "${{ needs.read-infra.outputs.acr }}" | cut -d. -f1) \
-            --image    mbr-api:${{ github.sha }} \
-            --image    mbr-api:latest \
-            apps/mbr-api
+            --image    insights-api:${{ github.sha }} \
+            --image    insights-api:latest \
+            apps/insights-api
 
-      - name: Update mbr-api Container App
+      - name: Update insights-api Container App
         run: |
           az containerapp update \
-            --name ca-mbr-api \
+            --name ca-insights-api \
             --resource-group ${{ needs.read-infra.outputs.resource_group }} \
-            --image ${{ needs.read-infra.outputs.acr }}/mbr-api:${{ github.sha }} \
+            --image ${{ needs.read-infra.outputs.acr }}/insights-api:${{ github.sha }} \
             --output none
 
-  # ── Build & deploy mbr-tools-mcp ─────────────────────────────────────────
-  build-mbr-tools-mcp:
-    name: Build mbr-tools-mcp
+  # ── Build & deploy presentation-tools ─────────────────────────────────────────
+  build-presentation-tools:
+    name: Build presentation-tools
     runs-on: ubuntu-latest
     needs: [changes, read-infra]
-    if: needs.changes.outputs.mbr_tools_mcp == 'true'
+    if: needs.changes.outputs.presentation_tools_mcp == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -194,28 +194,28 @@ jobs:
           tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build & push mbr-tools-mcp
+      - name: Build & push presentation-tools
         run: |
           az acr build \
             --registry $(echo "${{ needs.read-infra.outputs.acr }}" | cut -d. -f1) \
-            --image    mbr-tools-mcp:${{ github.sha }} \
-            --image    mbr-tools-mcp:latest \
-            apps/mbr-tools-mcp
+            --image    presentation-tools:${{ github.sha }} \
+            --image    presentation-tools:latest \
+            apps/presentation-tools-mcp
 
-      - name: Update mbr-tools-mcp Container App
+      - name: Update presentation-tools Container App
         run: |
           az containerapp update \
-            --name ca-mbr-tools-mcp \
+            --name ca-presentation-tools \
             --resource-group ${{ needs.read-infra.outputs.resource_group }} \
-            --image ${{ needs.read-infra.outputs.acr }}/mbr-tools-mcp:${{ github.sha }} \
+            --image ${{ needs.read-infra.outputs.acr }}/presentation-tools:${{ github.sha }} \
             --output none
 
-  # ── Build & deploy mbr-ui ────────────────────────────────────────────────
-  build-mbr-ui:
-    name: Build mbr-ui
+  # ── Build & deploy insights-ui ────────────────────────────────────────────────
+  build-insights-ui:
+    name: Build insights-ui
     runs-on: ubuntu-latest
     needs: [changes, read-infra]
-    if: needs.changes.outputs.mbr_ui == 'true'
+    if: needs.changes.outputs.insights_ui == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -225,21 +225,21 @@ jobs:
           tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build & push mbr-ui
+      - name: Build & push insights-ui
         run: |
           az acr build \
             --registry  $(echo "${{ needs.read-infra.outputs.acr }}" | cut -d. -f1) \
-            --image     mbr-ui:${{ github.sha }} \
-            --image     mbr-ui:latest \
+            --image     insights-ui:${{ github.sha }} \
+            --image     insights-ui:latest \
             --build-arg VITE_API_BASE_URL=/api \
-            apps/mbr-ui
+            apps/insights-ui
 
-      - name: Update mbr-ui Container App
+      - name: Update insights-ui Container App
         run: |
           az containerapp update \
-            --name ca-mbr-ui \
+            --name ca-insights-ui \
             --resource-group ${{ needs.read-infra.outputs.resource_group }} \
-            --image ${{ needs.read-infra.outputs.acr }}/mbr-ui:${{ github.sha }} \
+            --image ${{ needs.read-infra.outputs.acr }}/insights-ui:${{ github.sha }} \
             --output none
 
   # ── Deploy Foundry agents ─────────────────────────────────────────────────
@@ -274,48 +274,48 @@ jobs:
             --mcp-server-url         https://${{ needs.read-infra.outputs.mcp_fqdn }}/mcp \
             --output                 agents/agent_ids.json
 
-      - name: Inject agent names into ca-mbr-api
+      - name: Inject agent names into ca-insights-api
         run: |
           CONV_NAME=$(python -c "import json; d=json.load(open('agents/agent_ids.json')); print([k for k in d if 'conversational' in k][0])")
           PRES_NAME=$(python -c "import json; d=json.load(open('agents/agent_ids.json')); print([k for k in d if 'presentation' in k][0])")
           az containerapp update \
-            --name ca-mbr-api \
+            --name ca-insights-api \
             --resource-group ${{ needs.read-infra.outputs.resource_group }} \
-            --set-env-vars "CONVERSATIONAL_AGENT_NAME=$CONV_NAME" "MBR_PRESENTATION_AGENT_NAME=$PRES_NAME" \
+            --set-env-vars "CONVERSATIONAL_AGENT_NAME=$CONV_NAME" "PRESENTATION_AGENT_NAME=$PRES_NAME" \
             --output none
 
   # ── Smoke test ────────────────────────────────────────────────────────────
   smoke-test:
     name: Smoke test
     runs-on: ubuntu-latest
-    needs: [read-infra, build-mbr-api, build-mbr-tools-mcp, build-mbr-ui]
+    needs: [read-infra, build-insights-api, build-presentation-tools, build-insights-ui]
     if: always() && !cancelled() && needs.read-infra.result == 'success'
     steps:
-      - name: Health check — mbr-api
+      - name: Health check — insights-api
         run: |
           curl --fail --retry 5 --retry-delay 10 \
-            "${{ needs.read-infra.outputs.mbr_api_url }}/health"
+            "${{ needs.read-infra.outputs.insights_api_url }}/health"
 
   # ── Summary ───────────────────────────────────────────────────────────────
   summary:
     name: Deployment summary
     runs-on: ubuntu-latest
-    needs: [read-infra, build-mbr-api, build-mbr-tools-mcp, build-mbr-ui, agents, smoke-test]
+    needs: [read-infra, build-insights-api, build-presentation-tools, build-insights-ui, agents, smoke-test]
     if: always()
     steps:
       - name: Write summary
         run: |
-          echo "### MBR Deploy — dev @ \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Insights Deploy — dev @ \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Resource | URL |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| mbr-api | ${{ needs.read-infra.outputs.mbr_api_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| insights-api | ${{ needs.read-infra.outputs.insights_api_url }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Foundry  | ${{ needs.read-infra.outputs.foundry_endpoint }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| mbr-api       | ${{ needs.build-mbr-api.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| mbr-tools-mcp | ${{ needs.build-mbr-tools-mcp.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| mbr-ui        | ${{ needs.build-mbr-ui.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| insights-api       | ${{ needs.build-insights-api.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| presentation-tools | ${{ needs.build-presentation-tools.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| insights-ui        | ${{ needs.build-insights-ui.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| agents        | ${{ needs.agents.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| smoke-test    | ${{ needs.smoke-test.result }} |" >> $GITHUB_STEP_SUMMARY

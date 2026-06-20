@@ -1,4 +1,4 @@
-# Apply or destroy Terraform infrastructure for LONGHAUL MBR AI Agents.
+# Apply or destroy Terraform infrastructure for LONGHAUL Insights AI Agents.
 
 param(
     [Parameter(Mandatory=$false)]
@@ -18,7 +18,7 @@ param(
     [string]$TfStateStorageAccount = "",
 
     [Parameter(Mandatory=$false)]
-    [string]$TfStateResourceGroup = "rg-tfstate-mbr",
+    [string]$TfStateResourceGroup = "rg-tfstate-ins",
 
     [Parameter(Mandatory=$false)]
     [string]$FabricWorkspaceId = "",
@@ -51,7 +51,7 @@ $env:ARM_SUBSCRIPTION_ID = $subscriptionId
 
 if (-not $TfStateStorageAccount) {
     $suffix = ($subscriptionId -replace '-', '').Substring(0, 8).ToLower()
-    $TfStateStorageAccount = "stotfmbr$suffix"
+    $TfStateStorageAccount = "stotfins$suffix"
     Write-Info "TF state storage account: $TfStateStorageAccount"
 }
 
@@ -63,7 +63,7 @@ New-TerraformVarsFile `
     -TenantId          $tenantId `
     -Location          $Location `
     -Environment       $Environment `
-    -ProjectName       "mbrtrucking" `
+    -ProjectName       "insights" `
     -FabricWorkspaceId $FabricWorkspaceId `
     -FabricArtifactId  $FabricArtifactId `
     -FabricSqlServer   $FabricSqlServer `
@@ -80,7 +80,7 @@ try {
         -backend-config "resource_group_name=$TfStateResourceGroup" `
         -backend-config "storage_account_name=$TfStateStorageAccount" `
         -backend-config "container_name=tfstate" `
-        -backend-config "key=mbr-trucking.tfstate"
+        -backend-config "key=insights.tfstate"
     if ($LASTEXITCODE -ne 0) { throw "terraform init failed (exit $LASTEXITCODE)" }
 
     switch ($Action) {
@@ -119,7 +119,7 @@ try {
             $outputs = terraform output -json | ConvertFrom-Json
 
             Write-Success "Infrastructure deployed"
-            Write-Host "  mbr_api_url                  : $($outputs.mbr_api_url.value)"                   -ForegroundColor Gray
+            Write-Host "  insights_api_url                  : $($outputs.insights_api_url.value)"                   -ForegroundColor Gray
             Write-Host "  longhaul_ui_url              : $($outputs.longhaul_ui_url.value)"               -ForegroundColor Gray
             Write-Host "  mcp_tools_api_fqdn           : $($outputs.mcp_tools_api_fqdn.value)"            -ForegroundColor Gray
             Write-Host "  container_registry_server    : $($outputs.container_registry_login_server.value)" -ForegroundColor Gray

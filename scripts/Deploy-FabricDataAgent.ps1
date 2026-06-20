@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Create the LONGHAUL Fabric Data Agent connected to the lh_mbr_trucking Lakehouse.
+    Create the LONGHAUL Fabric Data Agent connected to the lh_trucking_ops Lakehouse.
 
 .DESCRIPTION
-    Uses the Fabric REST API to create 'da_mbr_trucking' (idempotent).
+    Uses the Fabric REST API to create 'da_trucking_ops' (idempotent).
     The Data Agent exposes the Lakehouse SQL analytics endpoint to AI Foundry agents
     via natural language queries - no Semantic Model required.
 
@@ -14,10 +14,10 @@
     Fabric workspace GUID.
 
 .PARAMETER LakehouseId
-    Fabric Lakehouse item GUID (lh_mbr_trucking).
+    Fabric Lakehouse item GUID (lh_trucking_ops).
 
 .PARAMETER DataAgentName
-    Display name for the Data Agent. Default: da_mbr_trucking
+    Display name for the Data Agent. Default: da_trucking_ops
 
 .PARAMETER KeyVaultUri
     Key Vault URI to store fabric-data-agent-id and fabric-data-agent-url secrets.
@@ -35,7 +35,7 @@
 param(
     [Parameter(Mandatory=$true)]  [string]$WorkspaceId,
     [Parameter(Mandatory=$true)]  [string]$LakehouseId,
-    [string]$DataAgentName          = "da_mbr_trucking",
+    [string]$DataAgentName          = "da_trucking_ops",
     [string]$KeyVaultUri            = "",
     [string]$AppIdentityPrincipalId = ""
 )
@@ -158,7 +158,7 @@ if ($existing) {
 
     $createBody = @{
         displayName = $DataAgentName
-        description = "LONGHAUL MBR trucking data agent - queries lh_mbr_trucking Lakehouse"
+        description = "LONGHAUL trucking operations data agent - queries lh_trucking_ops Lakehouse"
     } | ConvertTo-Json -Depth 5 -Compress
 
     try {
@@ -212,7 +212,7 @@ if ($existing) {
     $dataAgentJson = @{
         entities = @(
             @{
-                name        = "lh_mbr_trucking"
+                name        = "lh_trucking_ops"
                 type        = "Lakehouse"
                 workspaceId = $WorkspaceId
                 artifactId  = $LakehouseId
@@ -221,7 +221,7 @@ if ($existing) {
         instructionSets = @(
             @{
                 role         = "Agent"
-                instructions = "You are da_mbr_trucking, the data agent for LONGHAUL, a long-haul trucking company. You have access to 13 months of operational KPI data (May 2024 to May 2025) across 5 regions (North, South, East, West, Central) and 20 vehicle types. Available tables: dim_month (time dimension), dim_region (region dimension), dim_vehicle_type (vehicle type dimension), fact_monthly_kpis (monthly KPIs per region), fact_vehicle_kpis (monthly KPIs per region and vehicle type). Always join fact tables with dimension tables to return human-readable labels. Express financial values in dollars. Express miles as whole numbers. When comparing periods, calculate percentage change and indicate direction."
+                instructions = "You are da_trucking_ops, the data agent for LONGHAUL, a long-haul trucking company. You have access to 13 months of operational KPI data (May 2024 to May 2025) across 5 regions (North, South, East, West, Central) and 20 vehicle types. Available tables: dim_month (time dimension), dim_region (region dimension), dim_vehicle_type (vehicle type dimension), fact_monthly_kpis (monthly KPIs per region), fact_vehicle_kpis (monthly KPIs per region and vehicle type). Always join fact tables with dimension tables to return human-readable labels. Express financial values in dollars. Express miles as whole numbers. When comparing periods, calculate percentage change and indicate direction."
             }
         )
     } | ConvertTo-Json -Depth 10 -Compress

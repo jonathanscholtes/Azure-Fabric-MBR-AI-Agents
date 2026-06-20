@@ -100,32 +100,32 @@ function Invoke-AcrBuild {
 }
 
 # ---------------------------------------------------------------------------
-# Build mbr-api
+# Build insights-api
 # ---------------------------------------------------------------------------
-Write-Title "Building mbr-api"
+Write-Title "Building insights-api"
 Invoke-AcrBuild -RegistryName $registryName `
-                -Image        "mbr-api:latest" `
-                -ContextPath  "$root\apps\mbr-api"
-Write-Success "mbr-api built and pushed"
+                -Image        "insights-api:latest" `
+                -ContextPath  "$root\apps\insights-api"
+Write-Success "insights-api built and pushed"
 
 # ---------------------------------------------------------------------------
-# Build mbr-tools-mcp
+# Build presentation-tools
 # ---------------------------------------------------------------------------
-Write-Title "Building mbr-tools-mcp"
+Write-Title "Building presentation-tools"
 Invoke-AcrBuild -RegistryName $registryName `
-                -Image        "mbr-tools-mcp:latest" `
-                -ContextPath  "$root\apps\mbr-tools-mcp"
-Write-Success "mbr-tools-mcp built and pushed"
+                -Image        "presentation-tools:latest" `
+                -ContextPath  "$root\apps\presentation-tools-mcp"
+Write-Success "presentation-tools built and pushed"
 
 # ---------------------------------------------------------------------------
-# Build mbr-ui  (VITE_API_BASE_URL baked at build time)
+# Build insights-ui  (VITE_API_BASE_URL baked at build time)
 # ---------------------------------------------------------------------------
-Write-Title "Building mbr-ui"
+Write-Title "Building insights-ui"
 Invoke-AcrBuild -RegistryName $registryName `
-                -Image        "mbr-ui:latest" `
-                -ContextPath  "$root\apps\mbr-ui" `
+                -Image        "insights-ui:latest" `
+                -ContextPath  "$root\apps\insights-ui" `
                 -BuildArgs    @("VITE_API_BASE_URL=/api")
-Write-Success "mbr-ui built and pushed"
+Write-Success "insights-ui built and pushed"
 
 # ---------------------------------------------------------------------------
 # Update ACA revisions
@@ -133,9 +133,9 @@ Write-Success "mbr-ui built and pushed"
 Write-Title "Updating Container App revisions"
 
 $images = @{
-    "ca-mbr-api"       = "$Registry/mbr-api:latest"
-    "ca-mbr-tools-mcp" = "$Registry/mbr-tools-mcp:latest"
-    "ca-mbr-ui"        = "$Registry/mbr-ui:latest"
+    "ca-insights-api"       = "$Registry/insights-api:latest"
+    "ca-presentation-tools" = "$Registry/presentation-tools:latest"
+    "ca-insights-ui"        = "$Registry/insights-ui:latest"
 }
 
 foreach ($app in $images.Keys) {
