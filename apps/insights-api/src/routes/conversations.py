@@ -142,6 +142,13 @@ async def post_conversation(body: ConversationRequest, request: Request) -> Conv
     from ..models import KeyDriver, AnalyticsPayload, RevenuePerformanceData, CostManagementData
     from ..models import OperationalEfficiencyData, ServicePerformanceData, BottomLineData
 
+    def _clean(raw: Any) -> dict:
+        # Drop keys the agent set to null so the model's defaults apply
+        # instead of overriding required fields with None.
+        if not isinstance(raw, dict):
+            return {}
+        return {k: v for k, v in raw.items() if v is not None}
+
     key_drivers = []
     for kd in key_drivers_raw:
         try:
@@ -151,20 +158,20 @@ async def post_conversation(body: ConversationRequest, request: Request) -> Conv
 
     analytics = AnalyticsPayload(
         revenue_performance=RevenuePerformanceData(
-            **analytics_raw.get("revenue_performance", {})
-        ) if "revenue_performance" in analytics_raw else RevenuePerformanceData(),
+            **_clean(analytics_raw.get("revenue_performance"))
+        ),
         cost_management=CostManagementData(
-            **analytics_raw.get("cost_management", {})
-        ) if "cost_management" in analytics_raw else CostManagementData(),
+            **_clean(analytics_raw.get("cost_management"))
+        ),
         operational_efficiency=OperationalEfficiencyData(
-            **analytics_raw.get("operational_efficiency", {})
-        ) if "operational_efficiency" in analytics_raw else OperationalEfficiencyData(),
+            **_clean(analytics_raw.get("operational_efficiency"))
+        ),
         service_performance=ServicePerformanceData(
-            **analytics_raw.get("service_performance", {})
-        ) if "service_performance" in analytics_raw else ServicePerformanceData(),
+            **_clean(analytics_raw.get("service_performance"))
+        ),
         bottom_line=BottomLineData(
-            **analytics_raw.get("bottom_line", {})
-        ) if "bottom_line" in analytics_raw else BottomLineData(),
+            **_clean(analytics_raw.get("bottom_line"))
+        ),
     )
 
     return ConversationResponse(

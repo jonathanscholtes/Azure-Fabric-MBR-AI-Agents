@@ -53,6 +53,11 @@ output "ai_account_id" {
   value       = module.ai_services.ai_account_id
 }
 
+output "ai_project_id" {
+  description = "Resource ID of the AI Foundry project (used by Deploy-FabricDataAgent.ps1 to create the fabric_dataagent connection)"
+  value       = module.ai_services.ai_project_id
+}
+
 output "model_deployment" {
   description = "Name of the full-tier model deployment (gpt-4.1)"
   value       = module.ai_services.model_deployment

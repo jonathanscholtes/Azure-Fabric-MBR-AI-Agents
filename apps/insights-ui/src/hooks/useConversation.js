@@ -1,10 +1,17 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api';
 
 export function useConversation(period, region) {
-  const [threadId] = useState(() => crypto.randomUUID());
+  const [threadId, setThreadId] = useState(() => crypto.randomUUID());
   const [messages, setMessages] = useState([]);
+
+  // Reset the conversation when the period/region context changes so turns
+  // from different contexts aren't mixed into the same agent thread.
+  useEffect(() => {
+    setThreadId(crypto.randomUUID());
+    setMessages([]);
+  }, [period, region]);
 
   const mutation = useMutation({
     mutationFn: (message) =>

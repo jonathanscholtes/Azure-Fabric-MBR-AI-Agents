@@ -60,6 +60,7 @@ logger = logging.getLogger(__name__)
 AGENT_MODULES = [conversational_agent, presentation_agent]
 
 DEFAULT_FABRIC_CONNECTION_NAME    = "fabric_dataagent"
+FABRIC_TOOL_METADATA_TYPE         = "fabric_dataagent_preview"  # connection metadata.type that marks a Fabric Data Agent tool connection
 DEFAULT_MCP_CONNECTION_NAME       = "presentation-tools-mcp"
 DEFAULT_MODEL_DEPLOYMENT          = "gpt-4.1"
 DEFAULT_MINI_MODEL_DEPLOYMENT     = "gpt-4.1-mini"
@@ -205,12 +206,65 @@ class AgentDeployer:
     # Tool builders
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _connection_metadata(conn) -> dict:
+        """Best-effort extraction of a connection's metadata dict across SDK shapes."""
+        meta = (
+            getattr(conn, "metadata", None)
+            or getattr(getattr(conn, "properties", None), "metadata", None)
+            or {}
+        )
+        return meta if isinstance(meta, dict) else {}
+
+    def _resolve_fabric_connection(self) -> str:
+        """Return the Foundry connection to bind the Fabric Data Agent tool to.
+
+        Discovers the connection by its ``metadata.type`` (``fabric_dataagent_preview``)
+        instead of relying solely on a hardcoded name, so the agents bind to whatever
+        working Fabric connection exists — the one Deploy-FabricDataAgent.ps1 creates,
+        or one created in the Foundry portal (which gets a random ``..._<token>`` name).
+        The configured ``--fabric-connection-name`` is preferred when it is itself a
+        valid Fabric connection, and used as the fallback when discovery finds nothing
+        or the SDK doesn't expose connection metadata.
+        """
+        configured = self.fabric_connection_name
+        try:
+            matches: list[str] = []
+            for summary in self.project_client.connections.list():
+                name = getattr(summary, "name", None)
+                if not name:
+                    continue
+                meta = self._connection_metadata(summary)
+                if meta.get("type") != FABRIC_TOOL_METADATA_TYPE:
+                    # List items can omit metadata — fetch full details before deciding.
+                    try:
+                        meta = self._connection_metadata(self.project_client.connections.get(name))
+                    except Exception:
+                        meta = {}
+                if meta.get("type") == FABRIC_TOOL_METADATA_TYPE:
+                    matches.append(name)
+
+            if configured in matches:
+                logger.info("Fabric connection: '%s' (discovered; matches configured name).", configured)
+                return configured
+            if matches:
+                logger.info("Fabric connection: '%s' (discovered by metadata.type='%s').", matches[0], FABRIC_TOOL_METADATA_TYPE)
+                return matches[0]
+            logger.warning(
+                "No connection with metadata.type='%s' found; using configured name '%s'.",
+                FABRIC_TOOL_METADATA_TYPE, configured,
+            )
+        except Exception as exc:
+            logger.warning("Fabric connection discovery failed (%s); using configured name '%s'.", exc, configured)
+        return configured
+
     def _fabric_tool(self) -> Optional[MicrosoftFabricAgentTool]:
-        logger.info("MicrosoftFabricAgentTool via connection name: %s", self.fabric_connection_name)
+        conn = self._resolve_fabric_connection()
+        logger.info("MicrosoftFabricAgentTool via connection: %s", conn)
         return MicrosoftFabricAgentTool(
             fabric_dataagent_preview=FabricDataAgentToolParameters(
                 project_connections=[
-                    ToolProjectConnection(project_connection_id=self.fabric_connection_name)
+                    ToolProjectConnection(project_connection_id=conn)
                 ]
             )
         )

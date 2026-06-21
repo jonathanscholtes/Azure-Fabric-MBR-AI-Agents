@@ -1,6 +1,43 @@
 import { useRef, useEffect, useState } from 'react'
 import AgentMessageContent from './AgentMessageContent'
 
+// Backend is non-streaming, so we can't get real phase events. These staged
+// labels are time-based and reflect the known pipeline — the Fabric data-agent
+// query dominates the wait (~25-30s), then the model composes the response.
+const PENDING_STAGES = [
+  { at: 0,  label: 'Querying Fabric data agent…' },
+  { at: 12, label: 'Analyzing KPIs…' },
+  { at: 24, label: 'Composing insights…' },
+]
+
+function PendingIndicator() {
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    const start = Date.now()
+    const id = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - start) / 1000))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const label = PENDING_STAGES.reduce(
+    (acc, s) => (elapsed >= s.at ? s.label : acc),
+    PENDING_STAGES[0].label,
+  )
+
+  return (
+    <span className="message-content message--pending">
+      <span className="typing-indicator">
+        <span /><span /><span />
+      </span>
+      <span className="typing-label">
+        {label}{elapsed >= 3 ? ` · ${elapsed}s` : ''}
+      </span>
+    </span>
+  )
+}
+
 function SendIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -65,12 +102,7 @@ export default function ConversationPanel({ period, region, messages, isPending,
         {isPending && (
           <div className="message message--assistant">
             <span className="message-role">AI Agent</span>
-            <span className="message-content message--pending">
-              <span className="typing-indicator">
-                <span /><span /><span />
-              </span>
-              <span className="typing-label">Thinking…</span>
-            </span>
+            <PendingIndicator />
           </div>
         )}
 

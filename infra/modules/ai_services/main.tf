@@ -98,6 +98,14 @@ resource "azapi_resource" "ai_project" {
   depends_on = [azapi_resource.gpt41_deployment]
 }
 
+# Foundry -> Fabric Data Agent connection.
+# Terraform creates the connection "shell" with the discriminator metadata.type =
+# "fabric_dataagent_preview" (this is what makes Foundry expose it as a Fabric Data Agent
+# tool) and target = "-". The real WorkspaceId + ArtifactId (the Data Agent's GUID) are set
+# by scripts/Deploy-FabricDataAgent.ps1 AFTER the Data Agent exists. We seed placeholder
+# credentials here because the 2025-09-01 API rejects an empty credentials block for
+# authType=CustomKeys ("Credentials Property can't be empty"). ignore_changes=[body] keeps
+# re-applies from wiping the script-set values back to these placeholders.
 resource "azapi_resource" "fabric_dataagent_connection" {
   type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-09-01"
   name      = "fabric_dataagent"
@@ -105,24 +113,27 @@ resource "azapi_resource" "fabric_dataagent_connection" {
 
   body = {
     properties = {
-      category      = "CustomKeys"
-      authType      = "CustomKeys"
-      target        = "https://api.fabric.microsoft.com"
-      isSharedToAll = true
+      category                    = "CustomKeys"
+      authType                    = "CustomKeys"
+      target                      = "-"
+      isSharedToAll               = false
       useWorkspaceManagedIdentity = false
+      peRequirement               = "NotRequired"
+      peStatus                    = "NotApplicable"
       credentials = {
         keys = {
-          WorkspaceId = var.fabric_workspace_id
-          ArtifactId  = var.fabric_artifact_id
+          WorkspaceId = "-"
+          ArtifactId  = "-"
         }
       }
       metadata = {
-        WorkspaceId = var.fabric_workspace_id
-        ArtifactId  = var.fabric_artifact_id
+        type = "fabric_dataagent_preview"
       }
-      peRequirement = "NotRequired"
-      peStatus      = "NotApplicable"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [body]
   }
 
   depends_on = [azapi_resource.ai_project]
