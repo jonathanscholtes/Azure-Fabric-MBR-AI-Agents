@@ -1,12 +1,13 @@
 # Insight & Presentation Agents for Operational Data with Microsoft Fabric and Foundry
 ### End-to-End Example: Natural-Language Insight Discovery and Presentation Generation
 
-> [!WARNING]
-> This project is currently in active development and may contain breaking changes. Updates and modifications are being made frequently, which may impact stability or functionality. This notice will be removed once the project reaches a stable release.
 
 This project demonstrates how to connect **Microsoft Fabric structured data** to **Microsoft Foundry agents** — enabling natural-language conversations over live operational data and automated, template-consistent PowerPoint generation via MCP tooling.
 
 > Fabric Lakehouse → **Conversational Agent** surfaces insights through natural language → **Presentation Agent** generates a PowerPoint deck via MCP
+
+> [!TIP]
+> 📖 **Deep dive:** [Decoupling Data and Logic — Using Fabric Data Agents and Foundry to Automate Presentation Generation](https://stochasticcoder.com/2026/06/22/decoupling-data-and-logic-using-fabric-data-agents-and-foundry-to-automate-presentation-generation/). The companion post walks through the architecture and the reasoning behind separating data retrieval from presentation logic.
 
 ---
 
@@ -54,8 +55,6 @@ If you're exploring:
 → this project provides a complete, working reference implementation of all three patterns.
 
 > **The scenario is an example, not the product.** The example uses **LONGHAUL** — a fictional long-haul trucking company with 13 months of operational KPI data across 5 regions and 20 vehicle types. The domain is interchangeable; the patterns are what matter.
-
-
 
 ---
 
