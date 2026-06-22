@@ -295,12 +295,22 @@ WHERE m.period_label = 'Mar 2025'
 
 Click **Publish** in the top toolbar. The agent is not active until published.
 
-### 5f. Foundry connection name
+### 5f. Foundry connection (automated — no manual step)
 
-The Foundry connection to this Data Agent is created by Terraform with the name `fabric_dataagent`
-(it points at this workspace + Data Agent via the `fabric_workspace_id` / `fabric_artifact_id` variables).
-The Fabric Data Agent itself is named `da_trucking_ops`, but the **connection** Foundry uses is `fabric_dataagent`.
-This connection name must match `DEFAULT_FABRIC_CONNECTION_NAME` in `agents/deploy.py`:
+The connection is created in two stages, both automated:
+
+1. **Terraform** creates the `fabric_dataagent` connection shell with `metadata.type =
+   "fabric_dataagent_preview"` (and `target = "-"`, no credentials). That `type` discriminator
+   is what makes Foundry expose it as a **Fabric Data Agent** tool — a CustomKeys connection
+   without it is not recognized.
+2. **`Deploy-FabricDataAgent.ps1`** then sets the connection's **Workspace ID + Data Agent
+   Artifact ID** (the Data Agent's GUID, known only after the agent is created) via `az rest`.
+   Terraform's `ignore_changes = [body]` keeps later applies from wiping those values.
+
+The Fabric Data Agent item itself is `da_trucking_ops`; the **connection** the agents bind to
+is `fabric_dataagent`, which matches `DEFAULT_FABRIC_CONNECTION_NAME` in `agents/deploy.py`.
+`deploy.py` also discovers the connection by `metadata.type`, so the exact name is not
+load-bearing:
 ```python
 DEFAULT_FABRIC_CONNECTION_NAME = "fabric_dataagent"
 ```

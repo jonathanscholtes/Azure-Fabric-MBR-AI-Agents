@@ -37,7 +37,10 @@ param(
     [Parameter(Mandatory=$true)]  [string]$LakehouseId,
     [string]$DataAgentName          = "da_trucking_ops",
     [string]$KeyVaultUri            = "",
-    [string]$AppIdentityPrincipalId = ""
+    [string]$AppIdentityPrincipalId = "",
+    # Foundry project ARM resource id — used to create the fabric_dataagent connection
+    # the agents bind to. Pass the ai_project_id Terraform output.
+    [string]$AiProjectId            = ""
 )
 
 Set-StrictMode -Version Latest
@@ -221,7 +224,7 @@ if ($existing) {
         instructionSets = @(
             @{
                 role         = "Agent"
-                instructions = "You are da_trucking_ops, the data agent for LONGHAUL, a long-haul trucking company. You have access to 13 months of operational KPI data (May 2024 to May 2025) across 5 regions (North, South, East, West, Central) and 20 vehicle types. Available tables: dim_month (time dimension), dim_region (region dimension), dim_vehicle_type (vehicle type dimension), fact_monthly_kpis (monthly KPIs per region), fact_vehicle_kpis (monthly KPIs per region and vehicle type). Always join fact tables with dimension tables to return human-readable labels. Express financial values in dollars. Express miles as whole numbers. When comparing periods, calculate percentage change and indicate direction."
+                instructions = "You are da_trucking_ops, the data agent for LONGHAUL, a long-haul trucking company. You have access to 13 months of operational KPI data (May 2024 to May 2025) across 5 regions (North, South, East, West, Central) and 4 vehicle types (Flatbed, Refrigerated, Dry Van, Tanker). Available tables: dim_month (time dimension), dim_region (region dimension), dim_vehicle_type (vehicle type dimension), fact_monthly_kpis (monthly KPIs per region), fact_vehicle_kpis (monthly KPIs per region and vehicle type). period_label uses a 3-letter month abbreviation: 'Mar 2025', 'Feb 2025', 'Nov 2024'. Never use the full month name ('March 2025' returns no data). Always join fact tables with dimension tables to return human-readable labels. Use SUM() for fact columns and GROUP BY when aggregating across dimensions. Express financial values in dollars. Express miles as whole numbers. When comparing periods, calculate percentage change and indicate direction."
             }
         )
     } | ConvertTo-Json -Depth 10 -Compress
@@ -290,6 +293,47 @@ if ($KeyVaultUri) {
     } else {
         Write-Success "Secrets written: fabric-data-agent-id, fabric-data-agent-url"
     }
+}
+
+# ---------------------------------------------------------------------------
+# Set WorkspaceId + ArtifactId on the Foundry fabric_dataagent connection.
+# Terraform creates the connection shell (metadata.type = "fabric_dataagent_preview",
+# target "-", no credentials) — that discriminator is what makes Foundry expose it as a
+# Fabric Data Agent tool. The Workspace/Artifact IDs depend on the Data Agent created
+# above (its GUID is the ArtifactId), so they are set here via a full-body PUT that
+# re-asserts the metadata and adds the credentials. (No delete -> no secret purge.)
+# ---------------------------------------------------------------------------
+if ($AiProjectId) {
+    Write-Title "Foundry connection  -  fabric_dataagent (set Workspace/Artifact)"
+    $connUrl  = "https://management.azure.com$AiProjectId/connections/fabric_dataagent?api-version=2025-09-01"
+    $connBody = @{
+        properties = @{
+            category                    = "CustomKeys"
+            authType                    = "CustomKeys"
+            target                      = "-"
+            isSharedToAll               = $false
+            useWorkspaceManagedIdentity = $false
+            peRequirement               = "NotRequired"
+            peStatus                    = "NotApplicable"
+            credentials                 = @{ keys = @{ WorkspaceId = $WorkspaceId; ArtifactId = $dataAgentId } }
+            metadata                    = @{ type = "fabric_dataagent_preview" }
+        }
+    } | ConvertTo-Json -Depth 8 -Compress
+
+    $connTmp = [System.IO.Path]::GetTempFileName()
+    $connBody | Out-File -FilePath $connTmp -Encoding utf8
+    az rest --method put --url $connUrl --headers "Content-Type=application/json" --body "@$connTmp" --output none
+    $connExit = $LASTEXITCODE
+    Remove-Item $connTmp -Force
+    if ($connExit -ne 0) {
+        Write-Warn "Could not set Workspace/Artifact on the 'fabric_dataagent' connection (exit $connExit)."
+        Write-Info  "Set them manually: Foundry portal > Tools > fabric_dataagent > Edit (WorkspaceId=$WorkspaceId, ArtifactId=$dataAgentId)."
+    } else {
+        Write-Success "fabric_dataagent connection updated (WorkspaceId=$WorkspaceId, ArtifactId=$dataAgentId)."
+    }
+} else {
+    Write-Warn "AiProjectId not supplied - skipping fabric_dataagent Workspace/Artifact update."
+    Write-Info  "Pass -AiProjectId (the ai_project_id Terraform output)."
 }
 
 # ---------------------------------------------------------------------------

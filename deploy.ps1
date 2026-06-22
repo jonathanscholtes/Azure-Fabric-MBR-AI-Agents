@@ -241,6 +241,7 @@ $script:McpFqdn               = if ($tfOutputs) { $tfOutputs.mcp_tools_api_fqdn.
 $script:InsightsApiUrl             = if ($tfOutputs) { $tfOutputs.insights_api_url.value }                      else { $null }
 $script:UiUrl                 = if ($tfOutputs) { $tfOutputs.longhaul_ui_url.value }                  else { $null }
 $script:AiAccountId           = if ($tfOutputs) { $tfOutputs.ai_account_id.value }                    else { $null }
+$script:AiProjectId           = if ($tfOutputs) { $tfOutputs.ai_project_id.value }                    else { $null }
 $script:KvName                = if ($tfOutputs) { $tfOutputs.key_vault_name.value }                   else { $null }
 $script:KvUri                 = if ($tfOutputs) { $tfOutputs.key_vault_uri.value }                    else { $null }
 $script:StorageAcct           = if ($tfOutputs) { $tfOutputs.storage_account_name.value }             else { $null }
@@ -374,7 +375,8 @@ if ($SkipFabric) {
             -WorkspaceId             $FabricWorkspaceId `
             -LakehouseId             $script:LakehouseId `
             -KeyVaultUri             ($script:KvUri -as [string]) `
-            -AppIdentityPrincipalId  ($script:AppIdentityPrincipalId -as [string])
+            -AppIdentityPrincipalId  ($script:AppIdentityPrincipalId -as [string]) `
+            -AiProjectId             ($script:AiProjectId -as [string])
 
         $script:DataAgentUrl = if ($daResult -and $daResult.DataAgentUrl) { $daResult.DataAgentUrl } else { "" }
         Write-Host "[OK] Fabric Data Agent configured." -ForegroundColor Green

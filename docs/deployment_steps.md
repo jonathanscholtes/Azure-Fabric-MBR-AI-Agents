@@ -110,7 +110,7 @@ The deployment runs six phases automatically:
 | 1 — Infrastructure | `Deploy-Infrastructure.ps1` | Provisions all Azure resources via Terraform |
 | 2 — Containers | `Deploy-Containers.ps1` | Builds and pushes `insights-api`, `presentation-tools`, and `insights-ui` images to ACR |
 | 3 — Fabric Lakehouse | `Deploy-FabricLakehouse.ps1` | Creates tables, seeds 13 months of KPI data, uploads `mbr_template.pptx` |
-| 3b — Fabric Data Agent | `Deploy-FabricDataAgent.ps1` | Creates `da_trucking_ops`, assigns managed identity Contributor access to the workspace |
+| 3b — Fabric Data Agent | `Deploy-FabricDataAgent.ps1` | Creates `da_trucking_ops`, sets the Workspace/Artifact IDs on the Terraform-created `fabric_dataagent` connection, and assigns managed identity Contributor access to the workspace |
 | 4 — Foundry Agents | `Deploy-FoundryAgents.ps1` | Deploys `conversational-agent` and `presentation-agent`, injects agent IDs as Container App environment variables |
 
 **Optional parameters:**
@@ -147,7 +147,7 @@ The deployment runs six phases automatically:
 
 ## Step 5 — Configure the Fabric Data Agent (Manual — Portal)
 
-The `Deploy-FabricDataAgent.ps1` script creates the `da_trucking_ops` agent via the Fabric REST API. However, the Fabric API does not reliably apply data sources or agent instructions — these two steps must be completed in the portal.
+The `Deploy-FabricDataAgent.ps1` script creates the `da_trucking_ops` agent via the Fabric REST API **and** sets the Workspace/Artifact IDs on the `fabric_dataagent` connection (Terraform creates that connection with the right `metadata.type`) — so no manual connection step is required. However, the Fabric API does not reliably apply data sources or agent instructions — these two steps must be completed in the portal.
 
 ### Fabric Admin Prerequisite
 
@@ -369,6 +369,7 @@ Key outputs:
 - [ ] Lakehouse tables created and seeded (`fact_monthly_kpis`, `fact_vehicle_kpis`, `dim_month`, `dim_region`, `dim_vehicle_type`)
 - [ ] `mbr_template.pptx` uploaded to the `templates` blob container
 - [ ] `da_trucking_ops` visible in the Fabric workspace with `lh_trucking_ops` as a data source, instructions set, and example queries added
+- [ ] Foundry `fabric_dataagent` connection exists (Foundry portal → project → Connected resources / Tools) and shows as a **Fabric Data Agent**
 - [ ] Foundry agents `conversational-agent` and `presentation-agent` visible in the Foundry portal
 - [ ] Agent IDs injected as environment variables on `ca-insights-api` Container App (`CONVERSATIONAL_AGENT_NAME`, `PRESENTATION_AGENT_NAME`)
 - [ ] KPI bar loads on the Dashboard with data for the default period/region
